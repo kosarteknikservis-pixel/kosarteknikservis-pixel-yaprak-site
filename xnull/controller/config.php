@@ -82,6 +82,11 @@ if (!@$_SESSION[ 'dbdegistir' ]) {
    }
 }
 
+if (isset($db) && $db instanceof PDO) {
+	require_once __DIR__ . '/../../include/legal-pages.php';
+	legal_pages_ensure_schema($db);
+}
+
 // Global Site URL & Root Definition - Fully Dynamic & Portable
 if (!defined('SITE_ROOT')) {
     define('SITE_ROOT', dirname(dirname(__DIR__)));

@@ -22,22 +22,28 @@ if (isset($_POST['firma_kaydet'])) {
 		'adres' => trim((string) ($_POST['ayar_firma_adresi'] ?? '')),
 		'email' => trim((string) ($_POST['ayar_firma_email'] ?? '')),
 	);
-	$upd = $db->prepare(
-		'UPDATE ayar SET
-			ayar_firma_unvan=:unvan,
-			ayar_firma_tel=:tel,
-			ayar_firma_adresi=:adres,
-			ayar_firma_email=:email
-		WHERE ayar_id=0'
-	);
-	$ok = $upd->execute(array(
-		'unvan' => $firmaSaved['unvan'],
-		'tel'   => $firmaSaved['tel'],
-		'adres' => $firmaSaved['adres'],
-		'email' => $firmaSaved['email'],
-	));
-	if ($ok) {
-		legal_pages_sync_firma_all_pages($db, $firmaSaved);
+	$ok = false;
+	try {
+		legal_pages_ensure_schema($db);
+		$upd = $db->prepare(
+			'UPDATE ayar SET
+				ayar_firma_unvan=:unvan,
+				ayar_firma_tel=:tel,
+				ayar_firma_adresi=:adres,
+				ayar_firma_email=:email
+			WHERE ayar_id=0'
+		);
+		$ok = $upd->execute(array(
+			'unvan' => $firmaSaved['unvan'],
+			'tel'   => $firmaSaved['tel'],
+			'adres' => $firmaSaved['adres'],
+			'email' => $firmaSaved['email'],
+		));
+		if ($ok) {
+			legal_pages_sync_firma_all_pages($db, $firmaSaved);
+		}
+	} catch (Throwable $e) {
+		$ok = false;
 	}
 	header('Location: yasal-icerikler.php?status=' . ($ok ? 'ok' : 'no'));
 	exit;
@@ -69,6 +75,18 @@ $checks = array(
 		<h2>Yasal Sayfalar (PayTR)</h2>
 		<p class="text-muted">PayTR mağaza onayı için zorunlu iletişim bilgileri ve yasal sayfalar.</p>
 	</div>
+
+	<?php if (isset($_GET['status']) && $_GET['status'] === 'ok') { ?>
+	<div class="alert alert-success alert-dismissible" role="alert">
+		<button type="button" class="close" data-dismiss="alert" aria-label="Kapat"><span aria-hidden="true">&times;</span></button>
+		İletişim bilgileri kaydedildi ve yasal sayfalara uygulandı.
+	</div>
+	<?php } elseif (isset($_GET['status']) && $_GET['status'] === 'no') { ?>
+	<div class="alert alert-danger alert-dismissible" role="alert">
+		<button type="button" class="close" data-dismiss="alert" aria-label="Kapat"><span aria-hidden="true">&times;</span></button>
+		Kaydedilemedi. Veritabanı kolonları eksik olabilir — <a href="db_update_legal_firma.php">db_update_legal_firma.php</a> sayfasını açıp tekrar deneyin.
+	</div>
+	<?php } ?>
 
 	<div class="row">
 		<div class="col-md-5">

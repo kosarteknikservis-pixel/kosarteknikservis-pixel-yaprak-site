@@ -11,15 +11,18 @@ if (!function_exists('legal_pages_ensure_schema')) {
 		}
 		$done = true;
 
-		$alters = array(
-			"ALTER TABLE ayar ADD COLUMN ayar_firma_unvan VARCHAR(255) NOT NULL DEFAULT ''",
-			"ALTER TABLE ayar ADD COLUMN ayar_firma_tel VARCHAR(64) NOT NULL DEFAULT ''",
-			"ALTER TABLE ayar ADD COLUMN ayar_firma_adresi TEXT",
-			"ALTER TABLE ayar ADD COLUMN ayar_firma_email VARCHAR(255) NOT NULL DEFAULT ''",
+		$firmaCols = array(
+			'ayar_firma_unvan'  => "VARCHAR(255) NOT NULL DEFAULT ''",
+			'ayar_firma_tel'    => "VARCHAR(64) NOT NULL DEFAULT ''",
+			'ayar_firma_adresi' => 'TEXT NULL',
+			'ayar_firma_email'  => "VARCHAR(255) NOT NULL DEFAULT ''",
 		);
-		foreach ($alters as $sql) {
+		foreach ($firmaCols as $col => $def) {
 			try {
-				$db->exec($sql);
+				$chk = $db->query('SHOW COLUMNS FROM `ayar` LIKE ' . $db->quote($col));
+				if (!$chk || $chk->rowCount() === 0) {
+					$db->exec("ALTER TABLE `ayar` ADD COLUMN `$col` $def");
+				}
 			} catch (Throwable $e) {
 			}
 		}

@@ -103,7 +103,11 @@ try {
         'ayar_youtube_autoplay' => 'INT(1) DEFAULT 0',
         'ayar_youtube_muted' => 'INT(1) DEFAULT 1',
         'ayar_youtube_loop' => 'INT(1) DEFAULT 0',
-        'ayar_urun_sablon' => 'INT(1) DEFAULT 1'
+        'ayar_urun_sablon' => 'INT(1) DEFAULT 1',
+        'ayar_firma_unvan' => "VARCHAR(255) DEFAULT ''",
+        'ayar_firma_tel' => "VARCHAR(64) DEFAULT ''",
+        'ayar_firma_adresi' => 'TEXT NULL',
+        'ayar_firma_email' => "VARCHAR(255) DEFAULT ''",
     ];
     foreach($ayarCols as $col => $type) addColumn($db, 'ayar', $col, $type);
 

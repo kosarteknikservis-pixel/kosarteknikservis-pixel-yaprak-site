@@ -301,6 +301,17 @@ if ( isset( $_POST[ 'genelayar' ] ) )
 		if ($check_otp_verify == 0) {
 			$db->exec("ALTER TABLE `ayar` ADD `ayar_siparis_dogrulama_on` INT(1) NOT NULL DEFAULT 1");
 		}
+		foreach ( array(
+			'ayar_firma_unvan'  => "VARCHAR(255) NOT NULL DEFAULT ''",
+			'ayar_firma_tel'    => "VARCHAR(64) NOT NULL DEFAULT ''",
+			'ayar_firma_adresi' => 'TEXT NULL',
+			'ayar_firma_email'  => "VARCHAR(255) NOT NULL DEFAULT ''",
+		) as $firmaCol => $firmaDef ) {
+			$check_firma = $db->query( "SHOW COLUMNS FROM `ayar` LIKE " . $db->quote( $firmaCol ) )->rowCount();
+			if ( $check_firma == 0 ) {
+				$db->exec( "ALTER TABLE `ayar` ADD `$firmaCol` $firmaDef" );
+			}
+		}
 	} catch (Exception $e) {
 		// Kolonlar zaten varsa veya hata olursa sessizce devam et
 	}
