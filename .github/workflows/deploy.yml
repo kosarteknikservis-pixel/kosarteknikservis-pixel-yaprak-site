@@ -34,24 +34,42 @@ jobs:
           SSH_REMOTE_DIR: ${{ secrets.SSH_REMOTE_DIR }}
         run: |
           REMOTE="${SSH_REMOTE_DIR%/}/"
-          rsync -avzr --delete \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude 'xnull/controller/config.local.php' \
-            --exclude 'deploy.config.json' \
-            --exclude 'debug_integrity_log.txt' \
-            --exclude 'xnull/debug_integrity_log.txt' \
-            --exclude 'xnull/cloaker/blocked_ips.txt' \
-            --exclude 'js/ajax/libs/GeoLite2-City.mmdb' \
-            --exclude '*.zip' \
-            --exclude 'GITHUB-KURULUM.md' \
-            --exclude 'scripts' \
-            --exclude 'xnull/assets/img/urunler/' \
-            --exclude 'xnull/assets/img/galeri/' \
-            --exclude 'xnull/assets/img/genel/' \
-            --exclude 'assets/img/genel/' \
-            -e "ssh -i ~/.ssh/deploy_key -p 22 -o StrictHostKeyChecking=no" \
-            ./ "${SSH_USER}@${SSH_HOST}:${REMOTE}"
+          SSH_OPTS="-o ConnectTimeout=60 -o ServerAliveInterval=30 -o ServerAliveCountMax=4 -o StrictHostKeyChecking=no"
+          RSYNC_SSH="ssh -i ~/.ssh/deploy_key -p 22 ${SSH_OPTS}"
+          RSYNC_EXCLUDES=(
+            --exclude '.git'
+            --exclude '.github'
+            --exclude 'xnull/controller/config.local.php'
+            --exclude 'deploy.config.json'
+            --exclude 'debug_integrity_log.txt'
+            --exclude 'xnull/debug_integrity_log.txt'
+            --exclude 'xnull/cloaker/blocked_ips.txt'
+            --exclude 'js/ajax/libs/GeoLite2-City.mmdb'
+            --exclude '*.zip'
+            --exclude 'GITHUB-KURULUM.md'
+            --exclude 'scripts'
+            --exclude 'xnull/assets/img/urunler/'
+            --exclude 'xnull/assets/img/galeri/'
+            --exclude 'xnull/assets/img/genel/'
+            --exclude 'assets/img/genel/'
+          )
+          ok=0
+          for attempt in 1 2 3; do
+            echo "Deploy denemesi ${attempt}/3..."
+            if rsync -avzr --delete "${RSYNC_EXCLUDES[@]}" \
+              -e "${RSYNC_SSH}" \
+              ./ "${SSH_USER}@${SSH_HOST}:${REMOTE}"; then
+              ok=1
+              break
+            fi
+            echo "rsync basarisiz, 20 sn bekleniyor..."
+            sleep 20
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "HATA: GitHub Actions IP adresinden SSH baglantisi kurulamadi."
+            echo "Hostinger hPanel → Guvenlik → SSH erisimini kontrol edin veya scripts/deploy-ssh-tar.ps1 ile yerel deploy yapin."
+            exit 1
+          fi
 
       - name: Dosya izinlerini duzelt
         uses: appleboy/ssh-action@v1.2.0
