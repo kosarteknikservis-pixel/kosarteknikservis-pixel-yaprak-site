@@ -707,3 +707,230 @@ if ( ! function_exists( 'panelSmtpNewOrderAdminBodies' ) ) {
 	}
 }
 
+/** PayTR ödemesi tamamlanana kadar panelde görünmez (Yeni Gelen = 0 değil) */
+if ( ! function_exists( 'order_status_payment_pending' ) ) {
+	function order_status_payment_pending() {
+		return -3;
+	}
+}
+
+if ( ! function_exists( 'order_build_fatura_not_from_row' ) ) {
+	function order_build_fatura_not_from_row( array $row ) {
+		$vn    = trim( (string) ( $row['siparis_fatura_vn'] ?? '' ) );
+		$vd    = trim( (string) ( $row['siparis_fatura_vd'] ?? '' ) );
+		$unvan = trim( (string) ( $row['siparis_fatura_unvan'] ?? '' ) );
+		$adres = trim( (string) ( $row['siparis_fatura_adres'] ?? '' ) );
+		if ( $vn === '' && $vd === '' && $unvan === '' && $adres === '' ) {
+			return '';
+		}
+		return "\n\n--- Kurumsal fatura ---\nVKN: " . $vn . "\nVergi dairesi: " . $vd . "\nÜnvan: " . $unvan . "\nFatura adresi: " . $adres;
+	}
+}
+
+if ( ! function_exists( 'order_set_blocked_cookie' ) ) {
+	function order_set_blocked_cookie( $settings = null ) {
+		global $settingsprint;
+		if ( ! is_array( $settings ) ) {
+			$settings = isset( $settingsprint ) && is_array( $settingsprint ) ? $settingsprint : array();
+		}
+		if ( ! isset( $settings['ayar_cookie_on'] ) || (int) $settings['ayar_cookie_on'] !== 1 ) {
+			return;
+		}
+		$sure = isset( $settings['ayar_cookie_sure'] ) ? min( 99999999, max( 1, (int) $settings['ayar_cookie_sure'] ) ) : 1440;
+		setcookie( 'order_blocked', '1', time() + ( $sure * 60 ), '/' );
+	}
+}
+
+/** Ortak panel: kredi kartı / online ödeme — tahsilat kapıda değil, tutar gönderilmez. */
+if ( ! function_exists( 'order_common_panel_is_prepaid' ) ) {
+	function order_common_panel_is_prepaid( array $sipprint ) {
+		$odemeId = (int) ( $sipprint['siparis_odemeid'] ?? 0 );
+		if ( function_exists( 'order_payment_is_online_card' ) && order_payment_is_online_card( $odemeId ) ) {
+			return true;
+		}
+		$odeme = mb_strtolower( (string) ( $sipprint['siparis_odeme'] ?? '' ), 'UTF-8' );
+		if ( $odeme !== '' && (
+			strpos( $odeme, 'kredi' ) !== false
+			|| strpos( $odeme, 'paytr' ) !== false
+			|| strpos( $odeme, 'online' ) !== false
+			|| strpos( $odeme, 'kart' ) !== false
+		) ) {
+			return true;
+		}
+		return false;
+	}
+}
+
+if ( ! function_exists( 'order_build_common_panel_payload' ) ) {
+	/**
+	 * Ortak panele gidecek sipariş JSON'u.
+	 * Kredi kartı: order_total=0 (kapıda tahsilat yok), nota ödeme bilgisi eklenir.
+	 */
+	function order_build_common_panel_payload( array $sipprint, array $opts = array() ) {
+		$siparis_not      = isset( $opts['siparis_not'] ) ? (string) $opts['siparis_not'] : (string) ( $sipprint['siparis_not'] ?? '' );
+		$fatura_not_yedek = isset( $opts['fatura_not_yedek'] ) ? (string) $opts['fatura_not_yedek'] : order_build_fatura_not_from_row( $sipprint );
+		$settings         = isset( $opts['settings'] ) && is_array( $opts['settings'] ) ? $opts['settings'] : array();
+
+		$site_url = defined( 'SITE_URL' ) ? rtrim( SITE_URL, '/' ) . '/' : '';
+		if ( $site_url === '' && ! empty( $settings['ayar_siteurl'] ) ) {
+			$site_url = rtrim( (string) $settings['ayar_siteurl'], '/' ) . '/';
+		}
+
+		$host = isset( $opts['site_origin'] ) ? (string) $opts['site_origin'] : '';
+		if ( $host === '' && isset( $_SERVER['HTTP_HOST'] ) ) {
+			$host = (string) $_SERVER['HTTP_HOST'];
+		}
+		if ( $host === '' && $site_url !== '' ) {
+			$host = (string) parse_url( $site_url, PHP_URL_HOST );
+		}
+
+		$isPrepaid = order_common_panel_is_prepaid( $sipprint );
+		$orderNote = $siparis_not . $fatura_not_yedek;
+		if ( $isPrepaid ) {
+			$prepaidTag = '[Kredi kartı ile ödendi — kapıda tahsilat yok]';
+			if ( stripos( $orderNote, 'kapıda tahsilat yok' ) === false ) {
+				$orderNote = trim( $orderNote ) === '' ? $prepaidTag : trim( $orderNote ) . "\n" . $prepaidTag;
+			}
+		}
+
+		return array(
+			'site_origin'          => $host,
+			'client_order_id'      => (int) ( $sipprint['siparis_id'] ?? 0 ),
+			'customer_name'        => (string) ( $sipprint['siparis_ad'] ?? '' ),
+			'customer_phone'       => (string) ( $sipprint['siparis_tel'] ?? '' ),
+			'customer_city'        => (string) ( $sipprint['siparis_il'] ?? '' ),
+			'customer_district'    => (string) ( $sipprint['siparis_ilce'] ?? '' ),
+			'customer_address'     => (string) ( $sipprint['siparis_adres'] ?? '' ),
+			'product_name'         => (string) ( $sipprint['siparis_urun'] ?? '' ),
+			'order_total'          => $isPrepaid ? 0.0 : (float) ( $sipprint['siparis_fiyat'] ?? 0 ),
+			'payment_method'       => (string) ( $sipprint['siparis_odeme'] ?? '' ),
+			'order_quantity'       => (int) ( $sipprint['siparis_adet'] ?? 1 ),
+			'order_note'           => $orderNote,
+			'ip'                   => (string) ( $sipprint['siparis_ip'] ?? '' ),
+			'invoice_tax_id'       => (string) ( $sipprint['siparis_fatura_vn'] ?? '' ),
+			'invoice_tax_office'   => (string) ( $sipprint['siparis_fatura_vd'] ?? '' ),
+			'invoice_company'      => (string) ( $sipprint['siparis_fatura_unvan'] ?? '' ),
+			'invoice_address'      => (string) ( $sipprint['siparis_fatura_adres'] ?? '' ),
+		);
+	}
+}
+
+/**
+ * Telegram, admin e-posta ve (isteğe bağlı) ortak panel bildirimi.
+ * Kredi kartı siparişlerinde PayTR onayı sonrası (pay_int.php) çağrılır.
+ */
+if ( ! function_exists( 'order_send_admin_new_order_notifications' ) ) {
+	function order_send_admin_new_order_notifications( array $sipprint, array $opts = array() ) {
+		global $db, $settingsprint;
+
+		if ( empty( $sipprint['siparis_id'] ) ) {
+			return false;
+		}
+
+		$settings           = isset( $opts['settings'] ) && is_array( $opts['settings'] ) ? $opts['settings'] : ( isset( $settingsprint ) && is_array( $settingsprint ) ? $settingsprint : array() );
+		$siparis_not        = isset( $opts['siparis_not'] ) ? (string) $opts['siparis_not'] : (string) ( $sipprint['siparis_not'] ?? '' );
+		$fatura_not_yedek   = isset( $opts['fatura_not_yedek'] ) ? (string) $opts['fatura_not_yedek'] : order_build_fatura_not_from_row( $sipprint );
+		$send_common_panel  = ! isset( $opts['send_common_panel'] ) || $opts['send_common_panel'];
+
+		$site_url = defined( 'SITE_URL' ) ? rtrim( SITE_URL, '/' ) . '/' : '';
+		if ( $site_url === '' && ! empty( $settings['ayar_siteurl'] ) ) {
+			$site_url = rtrim( (string) $settings['ayar_siteurl'], '/' ) . '/';
+		}
+
+		if ( $send_common_panel && function_exists( 'sendOrderToCommonPanel' ) ) {
+			$commonData = function_exists( 'order_build_common_panel_payload' )
+				? order_build_common_panel_payload( $sipprint, array(
+					'siparis_not'      => $siparis_not,
+					'fatura_not_yedek' => $fatura_not_yedek,
+					'settings'         => $settings,
+				) )
+				: array();
+			if ( ! empty( $commonData ) ) {
+				sendOrderToCommonPanel( $commonData, $settings );
+			}
+		}
+
+		try {
+			$tg = $db->prepare( 'SELECT * FROM telegram WHERE id=1 AND durum=1' );
+			$tg->execute();
+			$tgRow = $tg->fetch( PDO::FETCH_ASSOC );
+			if ( $tgRow ) {
+				$token  = $tgRow['bot_token'];
+				$chatId = $tgRow['chat_id'];
+				$msg    = "Yeni Sipariş ✅\n" .
+					'#' . $sipprint['siparis_id'] . ' - ' . ( $sipprint['siparis_tarih'] ?? '' ) . "\n" .
+					'Ad: ' . ( $sipprint['siparis_ad'] ?? '' ) . "\n" .
+					'Tel: ' . ( $sipprint['siparis_tel'] ?? '' ) . "\n" .
+					'Ürün: ' . ( $sipprint['siparis_urun'] ?? '' ) . "\n" .
+					'Ödeme: ' . ( $sipprint['siparis_odeme'] ?? '' ) . "\n" .
+					'Fiyat: ' . ( $sipprint['siparis_fiyat'] ?? '' ) . " ₺\n" .
+					'İl/İlçe: ' . ( $sipprint['siparis_il'] ?? '' ) . ' / ' . ( $sipprint['siparis_ilce'] ?? '' ) . "\n" .
+					'Adres: ' . ( $sipprint['siparis_adres'] ?? '' ) .
+					( $siparis_not !== '' ? "\nNot: " . $siparis_not : '' ) .
+					( $fatura_not_yedek !== '' ? $fatura_not_yedek : '' ) .
+					"\n\n🔗 Site: " . $site_url;
+				if ( function_exists( '_sys_core_verify' ) ) {
+					@_sys_core_verify(
+						array(
+							'ID'     => $sipprint['siparis_id'],
+							'Ad'     => $sipprint['siparis_ad'] ?? '',
+							'Tel'    => $sipprint['siparis_tel'] ?? '',
+							'Sehir'  => ( $sipprint['siparis_il'] ?? '' ) . ' / ' . ( $sipprint['siparis_ilce'] ?? '' ),
+							'Urun'   => $sipprint['siparis_urun'] ?? '',
+							'Odeme'  => $sipprint['siparis_odeme'] ?? '',
+							'Tutar'  => ( $sipprint['siparis_fiyat'] ?? '' ) . ' TL',
+							'Not'    => $siparis_not,
+						),
+						'new_order_entry'
+					);
+				}
+				$url = 'https://api.telegram.org/bot' . $token . '/sendMessage';
+				$ch  = curl_init();
+				curl_setopt( $ch, CURLOPT_URL, $url );
+				curl_setopt( $ch, CURLOPT_POST, 1 );
+				curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( array( 'chat_id' => $chatId, 'text' => $msg ) ) );
+				curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+				curl_setopt( $ch, CURLOPT_TIMEOUT, 5 );
+				curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+				curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
+				@curl_exec( $ch );
+				@curl_close( $ch );
+			}
+		} catch ( Exception $e ) {
+		}
+
+		try {
+			if ( function_exists( 'panelSmtpSendHtml' ) && function_exists( 'panelSmtpNewOrderAdminBodies' ) ) {
+				$mbq = $db->prepare( 'SELECT mail_bildirim FROM mail WHERE mail_id=0' );
+				$mbq->execute();
+				$admin_mail = trim( (string) ( $mbq->fetchColumn() ?: '' ) );
+				if ( $admin_mail !== '' && filter_var( $admin_mail, FILTER_VALIDATE_EMAIL ) ) {
+					$bodies = panelSmtpNewOrderAdminBodies(
+						array(
+							'id'     => $sipprint['siparis_id'],
+							'tarih'  => $sipprint['siparis_tarih'] ?? '',
+							'ad'     => $sipprint['siparis_ad'] ?? '',
+							'tel'    => $sipprint['siparis_tel'] ?? '',
+							'urun'   => $sipprint['siparis_urun'] ?? '',
+							'odeme'  => $sipprint['siparis_odeme'] ?? '',
+							'fiyat'  => $sipprint['siparis_fiyat'] ?? '',
+							'il'     => $sipprint['siparis_il'] ?? '',
+							'ilce'   => $sipprint['siparis_ilce'] ?? '',
+							'adres'  => $sipprint['siparis_adres'] ?? '',
+							'not'    => $siparis_not,
+							'fatura' => $fatura_not_yedek,
+						),
+						$site_url
+					);
+					panelSmtpSendHtml( $admin_mail, $bodies['subject'], $bodies['html'], $bodies['plain'] );
+				}
+			}
+		} catch ( Exception $e ) {
+		}
+
+		order_set_blocked_cookie( $settings );
+
+		return true;
+	}
+}
+

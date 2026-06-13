@@ -2,7 +2,9 @@
 define('VITRIN_HEAD_MINIMAL', true);
 include 'include/head.php';
 $GuvenliGet = htmlspecialchars(trim((string) ($_GET['status'] ?? '')), ENT_QUOTES, 'UTF-8');
-$siparissor=$db->prepare("SELECT * from siparis where siparis_id=:guvenli and siparis_durum=0");
+$odeme_bekleyen = function_exists('order_status_payment_pending') ? order_status_payment_pending() : -3;
+$siparissor=$db->prepare("SELECT * from siparis where siparis_id=:guvenli and (siparis_durum=0 OR siparis_durum=:odeme_bekleyen)");
+$siparissor->bindValue(':odeme_bekleyen', $odeme_bekleyen, PDO::PARAM_INT);
 $siparissor->execute(array('guvenli' => $GuvenliGet));
 $sipprint=$siparissor->fetch(PDO::FETCH_ASSOC); 
 
@@ -35,7 +37,7 @@ $patternUrl = rtrim(SITE_URL, '/') . '/xnull/assets/img/genel/pattern10.png';
         $paytr=$db->prepare("SELECT * from paytr where paytr_id=?");
         $paytr->execute(array(1));
         $paytrprint=$paytr->fetch(PDO::FETCH_ASSOC);
-        if ($sipprint && $sipprint['siparis_durum'] == 0) {
+        if ($sipprint && ((int) $sipprint['siparis_durum'] === 0 || (int) $sipprint['siparis_durum'] === $odeme_bekleyen)) {
 
           try {
             $db->exec('ALTER TABLE siparis ADD COLUMN siparis_durumpay TINYINT(1) NOT NULL DEFAULT 0');

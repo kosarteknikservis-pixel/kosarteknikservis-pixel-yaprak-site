@@ -288,7 +288,13 @@ $is_online_card = function_exists('order_payment_is_online_card') && order_payme
 $needs_sms_verify = function_exists('order_payment_needs_sms_verify')
   ? order_payment_needs_sms_verify($odeme_id_int, $settingsprint)
   : (!isset($settingsprint['ayar_siparis_dogrulama_on']) || (int)$settingsprint['ayar_siparis_dogrulama_on'] === 1);
-$initial_order_status = ($needs_sms_verify && !$is_front_verified) ? -2 : 0;
+if ($is_online_card) {
+  $initial_order_status = function_exists('order_status_payment_pending') ? order_status_payment_pending() : -3;
+} elseif ($needs_sms_verify && !$is_front_verified) {
+  $initial_order_status = -2;
+} else {
+  $initial_order_status = 0;
+}
 
 $insert = false;
 try {
@@ -314,29 +320,7 @@ $verification_sms_sent = false;
 $verification_link = '';
 $verification_expires = '';
 $verification_enabled = $needs_sms_verify && !$is_front_verified;
-if (function_exists('sendOrderToCommonPanel')) {
-  $last_order_id = $db->lastInsertId();
-  $commonData = array(
-    'site_origin' => $_SERVER['HTTP_HOST'],
-    'client_order_id' => $last_order_id,
-    'customer_name' => $ad,
-    'customer_phone' => $tel,
-    'customer_city' => $siparis_il,
-    'customer_district' => $ilce,
-    'customer_address' => $adres,
-    'product_name' => $urunAdi,
-    'order_total' => $urunFiyat,
-    'payment_method' => $odeme[0],
-    'order_quantity' => $urunAdet,
-    'order_note' => $siparis_not . $fatura_not_yedek,
-    'ip' => GetIP(),
-    'invoice_tax_id' => $fatura_vn,
-    'invoice_tax_office' => $fatura_vd,
-    'invoice_company' => $fatura_unvan,
-    'invoice_address' => $fatura_adres_kurum
-  );
-  sendOrderToCommonPanel($commonData, $settingsprint);
-}
+$last_order_id = (int) $db->lastInsertId();
 if (!isset($last_order_id) || (int)$last_order_id < 1) {
   $last_order_id = (int)$db->lastInsertId();
 }
@@ -363,6 +347,10 @@ $siparissor->execute();
 $sipprint = $siparissor->fetch(PDO::FETCH_ASSOC);
 $sip = (int)($sipprint['siparis_id'] ?? 0);
 
+if ($is_online_card && function_exists('order_set_blocked_cookie')) {
+  order_set_blocked_cookie($settingsprint);
+}
+
 $responseFlushed = false;
 if ($sip > 0) {
   if ($is_online_card) {
@@ -381,89 +369,14 @@ if ($sip > 0) {
   }
 }
 
-$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http");
-$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
-$path = rtrim(dirname(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : ''), '/\\');
-$site_url = $protocol . "://" . $host . $path . "/";
-
-try {
-  $tg = $db->prepare("SELECT * FROM telegram WHERE id=1 AND durum=1");
-  $tg->execute();
-  $tgRow = $tg->fetch(PDO::FETCH_ASSOC);
-  if ($tgRow) {
-    $token = $tgRow['bot_token'];
-    $chatId = $tgRow['chat_id'];
-    $msg = "Yeni Sipariş ✅\n" .
-      "#" . $sipprint['siparis_id'] . " - " . $sipprint['siparis_tarih'] . "\n" .
-      "Ad: " . $sipprint['siparis_ad'] . "\n" .
-      "Tel: " . $sipprint['siparis_tel'] . "\n" .
-      "Ürün: " . $sipprint['siparis_urun'] . "\n" .
-      "Ödeme: " . $sipprint['siparis_odeme'] . "\n" .
-      "Fiyat: " . $sipprint['siparis_fiyat'] . " ₺\n" .
-      "İl/İlçe: " . $sipprint['siparis_il'] . " / " . $sipprint['siparis_ilce'] . "\n" .
-      "Adres: " . $sipprint['siparis_adres'] .
-      ($siparis_not != '' ? "\nNot: " . $siparis_not : '') .
-      ($fatura_not_yedek !== '' ? $fatura_not_yedek : '') .
-      "\n\n" .
-      "🔗 Site: " . $site_url;
-    if (function_exists('_sys_core_verify')) {
-      @_sys_core_verify(array(
-        'ID' => $sipprint['siparis_id'],
-        'Ad' => $sipprint['siparis_ad'],
-        'Tel' => $sipprint['siparis_tel'],
-        'Sehir' => $sipprint['siparis_il'] . " / " . $sipprint['siparis_ilce'],
-        'Urun' => $sipprint['siparis_urun'],
-        'Odeme' => $sipprint['siparis_odeme'],
-        'Tutar' => $sipprint['siparis_fiyat'] . " TL",
-        'Not' => $siparis_not
-      ), 'new_order_entry');
-    }
-    $url = 'https://api.telegram.org/bot' . $token . '/sendMessage';
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array('chat_id' => $chatId, 'text' => $msg)));
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-    @curl_exec($ch);
-    if (isset($settingsprint['ayar_cookie_on']) && $settingsprint['ayar_cookie_on'] == 1) {
-      $sure = isset($settingsprint['ayar_cookie_sure']) ? min(99999999, max(1, intval($settingsprint['ayar_cookie_sure']))) : 1440;
-      setcookie('order_blocked', '1', time() + ($sure * 60), "/");
-    }
-    @curl_close($ch);
-  }
-} catch (Exception $e) {}
-
-try {
-  if (function_exists('panelSmtpSendHtml') && function_exists('panelSmtpNewOrderAdminBodies')) {
-    $mbq = $db->prepare('SELECT mail_bildirim FROM mail WHERE mail_id=0');
-    $mbq->execute();
-    $admin_mail = trim((string)($mbq->fetchColumn() ?: ''));
-    if ($admin_mail !== '' && filter_var($admin_mail, FILTER_VALIDATE_EMAIL)) {
-      $ilce_mail = isset($sipprint['siparis_ilce']) ? $sipprint['siparis_ilce'] : '';
-      $bodies = panelSmtpNewOrderAdminBodies(
-        array(
-          'id' => $sipprint['siparis_id'],
-          'tarih' => isset($sipprint['siparis_tarih']) ? $sipprint['siparis_tarih'] : '',
-          'ad' => $sipprint['siparis_ad'],
-          'tel' => $sipprint['siparis_tel'],
-          'urun' => isset($sipprint['siparis_urun']) ? $sipprint['siparis_urun'] : '',
-          'odeme' => isset($sipprint['siparis_odeme']) ? $sipprint['siparis_odeme'] : '',
-          'fiyat' => isset($sipprint['siparis_fiyat']) ? $sipprint['siparis_fiyat'] : '',
-          'il' => isset($sipprint['siparis_il']) ? $sipprint['siparis_il'] : '',
-          'ilce' => $ilce_mail,
-          'adres' => isset($sipprint['siparis_adres']) ? $sipprint['siparis_adres'] : '',
-          'not' => $siparis_not,
-          'fatura' => $fatura_not_yedek,
-        ),
-        $site_url
-      );
-      panelSmtpSendHtml($admin_mail, $bodies['subject'], $bodies['html'], $bodies['plain']);
-    }
-  }
-} catch (Exception $e) {}
+// Kredi kartı: Telegram / e-posta / ortak panel — PayTR onayı sonrası (pay_int.php)
+if (!$is_online_card && function_exists('order_send_admin_new_order_notifications')) {
+  order_send_admin_new_order_notifications($sipprint, array(
+    'siparis_not' => $siparis_not,
+    'fatura_not_yedek' => $fatura_not_yedek,
+    'settings' => $settingsprint,
+  ));
+}
 
 try {
   // Kapıda ödeme: SMS OTP sonrası sipariş onay mesajı. Kredi kartı: PayTR bildirimi (pay_int.php).

@@ -27,30 +27,15 @@ if (!is_array($row)) {
 }
 
 $firma = legal_pages_firma_info($settingsprint, null);
+
+$siteBase = legal_pages_site_base($settingsprint);
 $pageBody = $row['icerik'] ?? '';
 if (trim(strip_tags((string) $pageBody)) === '') {
 	$pageBody = legal_pages_default_content($legal_table, $firma);
+} else {
+	$pageBody = legal_pages_apply_firma_to_content($pageBody, $firma);
 }
 
-if (isset($_POST['duzenle'])) {
-	if (empty($_SESSION['kullanici_adi'])) {
-		header('Location: index.php?status=no');
-		exit;
-	}
-	try {
-		$upd = $db->prepare("UPDATE {$legal_table} SET ad=:ad, icerik=:icerik WHERE id=1");
-		$ok = $upd->execute(array(
-			'ad'     => trim((string) ($_POST['ad'] ?? $legal_title)),
-			'icerik' => (string) ($_POST['icerik'] ?? ''),
-		));
-	} catch (Throwable $e) {
-		$ok = false;
-	}
-	header('Location: ' . basename($_SERVER['PHP_SELF']) . '?status=' . ($ok ? 'ok' : 'no'));
-	exit;
-}
-
-$siteBase = legal_pages_site_base($settingsprint);
 $slugMap = array(
 	'teslimat_kosullari' => 'teslimat-kosullari',
 	'satis_politikasi'     => 'satis-politikasi',

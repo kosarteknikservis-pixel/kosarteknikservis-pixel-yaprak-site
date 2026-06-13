@@ -1,7 +1,9 @@
 <?php
-include 'header.php';
-include 'topbar.php';
-include 'sidebar.php';
+require_once __DIR__ . '/controller/config.php';
+if (empty($_SESSION['kullanici_adi'])) {
+	header('Location: login.php');
+	exit;
+}
 
 require_once __DIR__ . '/../include/legal-pages.php';
 legal_pages_ensure_schema($db);
@@ -14,10 +16,12 @@ if (!is_array($settingsprint)) {
 }
 
 if (isset($_POST['firma_kaydet'])) {
-	if (empty($_SESSION['kullanici_adi'])) {
-		header('Location: index.php?status=no');
-		exit;
-	}
+	$firmaSaved = array(
+		'unvan' => trim((string) ($_POST['ayar_firma_unvan'] ?? '')),
+		'tel'   => trim((string) ($_POST['ayar_firma_tel'] ?? '')),
+		'adres' => trim((string) ($_POST['ayar_firma_adresi'] ?? '')),
+		'email' => trim((string) ($_POST['ayar_firma_email'] ?? '')),
+	);
 	$upd = $db->prepare(
 		'UPDATE ayar SET
 			ayar_firma_unvan=:unvan,
@@ -27,16 +31,30 @@ if (isset($_POST['firma_kaydet'])) {
 		WHERE ayar_id=0'
 	);
 	$ok = $upd->execute(array(
-		'unvan' => trim((string) ($_POST['ayar_firma_unvan'] ?? '')),
-		'tel'   => trim((string) ($_POST['ayar_firma_tel'] ?? '')),
-		'adres' => trim((string) ($_POST['ayar_firma_adresi'] ?? '')),
-		'email' => trim((string) ($_POST['ayar_firma_email'] ?? '')),
+		'unvan' => $firmaSaved['unvan'],
+		'tel'   => $firmaSaved['tel'],
+		'adres' => $firmaSaved['adres'],
+		'email' => $firmaSaved['email'],
 	));
+	if ($ok) {
+		legal_pages_sync_firma_all_pages($db, $firmaSaved);
+	}
 	header('Location: yasal-icerikler.php?status=' . ($ok ? 'ok' : 'no'));
 	exit;
 }
 
-$firma = legal_pages_firma_info($settingsprint, null);
+include 'header.php';
+include 'topbar.php';
+include 'sidebar.php';
+
+$settings = $db->prepare('SELECT * FROM ayar WHERE ayar_id=0');
+$settings->execute();
+$settingsprint = $settings->fetch(PDO::FETCH_ASSOC);
+if (!is_array($settingsprint)) {
+	$settingsprint = array();
+}
+
+$firma = legal_pages_firma_from_settings($settingsprint);
 $siteBase = legal_pages_site_base($settingsprint);
 $checks = array(
 	array('label' => 'Telefon numarası', 'ok' => $firma['tel'] !== ''),

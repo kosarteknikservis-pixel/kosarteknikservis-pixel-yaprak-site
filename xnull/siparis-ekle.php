@@ -247,30 +247,40 @@ if (isset($_POST['siparis_ekle'])) {
         try {
             include_once '../common_panel_sender.php';
             if (function_exists('sendOrderToCommonPanel')) {
-                // Ayarları çek
                 $settings_q=$db->prepare("SELECT * from ayar where ayar_id=?");
                 $settings_q->execute(array(0));
                 $stps=$settings_q->fetch(PDO::FETCH_ASSOC);
 
-                $commonData = [
-                    'site_origin'     => $_SERVER['HTTP_HOST'],
-                    'client_order_id' => $last_id,
-                    'customer_name'   => $ad,
-                    'customer_phone'  => $tel,
-                    'customer_city'   => $il,
-                    'customer_district' => $ilce,
-                    'customer_address' => $adres,
-                    'product_name'    => $urun_adi_clean,
-                    'order_total'     => $final_fiyat,
-                    'payment_method'  => $odeme_adi,
-                    'order_note'      => $siparis_not . $fatura_not_yedek,
-                    'ip'              => $rand_ip,
-                    'invoice_tax_id'  => $fatura_vn,
-                    'invoice_tax_office' => $fatura_vd,
-                    'invoice_company' => $fatura_unvan,
-                    'invoice_address' => $fatura_adres_kurum
-                ];
-                sendOrderToCommonPanel($commonData, $stps);
+                $sipRow = array(
+                    'siparis_id'           => $last_id,
+                    'siparis_ad'           => $ad,
+                    'siparis_tel'          => $tel,
+                    'siparis_il'           => $il,
+                    'siparis_ilce'         => $ilce,
+                    'siparis_adres'        => $adres,
+                    'siparis_urun'         => $urun_adi_clean,
+                    'siparis_fiyat'        => $final_fiyat,
+                    'siparis_odeme'        => $odeme_adi,
+                    'siparis_odemeid'      => $odeme_id,
+                    'siparis_adet'         => 1,
+                    'siparis_not'          => $siparis_not,
+                    'siparis_ip'           => $rand_ip,
+                    'siparis_fatura_vn'    => $fatura_vn,
+                    'siparis_fatura_vd'    => $fatura_vd,
+                    'siparis_fatura_unvan' => $fatura_unvan,
+                    'siparis_fatura_adres' => $fatura_adres_kurum,
+                );
+                $commonData = function_exists('order_build_common_panel_payload')
+                    ? order_build_common_panel_payload($sipRow, array(
+                        'siparis_not'      => $siparis_not,
+                        'fatura_not_yedek' => $fatura_not_yedek,
+                        'settings'         => $stps,
+                        'site_origin'      => $_SERVER['HTTP_HOST'] ?? '',
+                    ))
+                    : array();
+                if (!empty($commonData)) {
+                    sendOrderToCommonPanel($commonData, $stps);
+                }
             }
         } catch (Exception $e) { }
 

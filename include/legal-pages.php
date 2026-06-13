@@ -66,6 +66,80 @@ if (!function_exists('legal_pages_ensure_schema')) {
 	}
 }
 
+if (!function_exists('legal_pages_contact_html')) {
+	function legal_pages_contact_html(array $firma) {
+		$unvan = trim((string) ($firma['unvan'] ?? ''));
+		$tel   = trim((string) ($firma['tel'] ?? ''));
+		$adres = trim((string) ($firma['adres'] ?? ''));
+		$email = trim((string) ($firma['email'] ?? ''));
+
+		$html = '<p><strong>İletişim</strong><br>';
+		if ($unvan !== '') {
+			$html .= htmlspecialchars($unvan, ENT_QUOTES, 'UTF-8') . '<br>';
+		}
+		if ($tel !== '') {
+			$html .= 'Telefon: ' . htmlspecialchars($tel, ENT_QUOTES, 'UTF-8') . '<br>';
+		}
+		if ($email !== '') {
+			$html .= 'E-posta: ' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '<br>';
+		}
+		if ($adres !== '') {
+			$html .= 'Adres: ' . nl2br(htmlspecialchars($adres, ENT_QUOTES, 'UTF-8')) . '<br>';
+		}
+		$html .= '</p>';
+
+		return $html;
+	}
+}
+
+if (!function_exists('legal_pages_strip_leading_contact_block')) {
+	function legal_pages_strip_leading_contact_block($html) {
+		return preg_replace('/\s*<p>\s*<strong>\s*İletişim\s*<\/strong>[\s\S]*?<\/p>\s*/iu', '', (string) $html, 1);
+	}
+}
+
+if (!function_exists('legal_pages_apply_firma_to_content')) {
+	function legal_pages_apply_firma_to_content($html, array $firma) {
+		$body = legal_pages_strip_leading_contact_block($html);
+		return legal_pages_contact_html($firma) . $body;
+	}
+}
+
+if (!function_exists('legal_pages_firma_from_settings')) {
+	/** Panel formu: yalnızca ayar tablosundaki kayıtlı alanlar (fallback yok). */
+	function legal_pages_firma_from_settings(array $settings) {
+		return array(
+			'unvan' => trim((string) ($settings['ayar_firma_unvan'] ?? '')),
+			'tel'   => trim((string) ($settings['ayar_firma_tel'] ?? '')),
+			'adres' => trim((string) ($settings['ayar_firma_adresi'] ?? '')),
+			'email' => trim((string) ($settings['ayar_firma_email'] ?? '')),
+		);
+	}
+}
+
+if (!function_exists('legal_pages_sync_firma_all_pages')) {
+	function legal_pages_sync_firma_all_pages(PDO $db, array $firma) {
+		legal_pages_ensure_schema($db);
+		foreach (array('teslimat_kosullari', 'satis_politikasi', 'iptal_iade') as $table) {
+			$row = legal_pages_fetch_row($db, $table);
+			if (!is_array($row)) {
+				continue;
+			}
+			$icerik = (string) ($row['icerik'] ?? '');
+			if (trim(strip_tags($icerik)) === '') {
+				$icerik = legal_pages_default_content($table, $firma);
+			} else {
+				$icerik = legal_pages_apply_firma_to_content($icerik, $firma);
+			}
+			try {
+				$upd = $db->prepare("UPDATE {$table} SET icerik=:icerik WHERE id=1");
+				$upd->execute(array('icerik' => $icerik));
+			} catch (Throwable $e) {
+			}
+		}
+	}
+}
+
 if (!function_exists('legal_pages_firma_info')) {
 	function legal_pages_firma_info(array $settings, $whatsappprint = null) {
 		$unvan = trim((string) ($settings['ayar_firma_unvan'] ?? ''));
@@ -100,20 +174,7 @@ if (!function_exists('legal_pages_default_content')) {
 		$adres = trim((string) ($firma['adres'] ?? ''));
 		$email = trim((string) ($firma['email'] ?? ''));
 
-		$iletisim = '<p><strong>İletişim</strong><br>';
-		if ($unvan !== '') {
-			$iletisim .= htmlspecialchars($unvan, ENT_QUOTES, 'UTF-8') . '<br>';
-		}
-		if ($tel !== '') {
-			$iletisim .= 'Telefon: ' . htmlspecialchars($tel, ENT_QUOTES, 'UTF-8') . '<br>';
-		}
-		if ($email !== '') {
-			$iletisim .= 'E-posta: ' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '<br>';
-		}
-		if ($adres !== '') {
-			$iletisim .= 'Adres: ' . nl2br(htmlspecialchars($adres, ENT_QUOTES, 'UTF-8')) . '<br>';
-		}
-		$iletisim .= '</p>';
+		$iletisim = legal_pages_contact_html($firma);
 
 		if ($table === 'teslimat_kosullari') {
 			return $iletisim . '
@@ -266,6 +327,11 @@ if (!function_exists('legal_pages_render_public_shell')) {
 		$pageBody = $row['icerik'] ?? '';
 		if (trim(strip_tags((string) $pageBody)) === '') {
 			$pageBody = legal_pages_default_content($table, legal_pages_firma_info($settingsprint ?? array(), $whatsappprint ?? null));
+		} else {
+			$pageBody = legal_pages_apply_firma_to_content(
+				$pageBody,
+				legal_pages_firma_info($settingsprint ?? array(), $whatsappprint ?? null)
+			);
 		}
 
 		$siteBase   = legal_pages_site_base($settingsprint ?? array());

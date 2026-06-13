@@ -85,12 +85,25 @@ if( $hash != $post['hash'] )
 			exit;
 		}
 
-		// siparis_durum=0 "Yeni Gelen Siparişler"; kredi kartı başarısı siparis_durumpay ile işaretlenir (siparis-detay vb.)
+		// Ödeme başarılı: panele düşür (durum 0) + siparis_durumpay=1
 		try {
-			$duzenle = $db->prepare('UPDATE siparis SET siparis_durumpay=1 WHERE siparis_id=:siparis_id');
+			$duzenle = $db->prepare('UPDATE siparis SET siparis_durumpay=1, siparis_durum=0 WHERE siparis_id=:siparis_id');
 			$duzenle->execute(array('siparis_id' => $inovanceprint['siparis_id']));
+			$inovanceprint['siparis_durum'] = 0;
+			$inovanceprint['siparis_durumpay'] = 1;
 		} catch (Throwable $e) {
 			// Eski veritabanında kolon yoksa en azından durumu bozmamak için yut
+		}
+
+		// Telegram, admin e-posta, ortak panel — ödeme tamamlandıktan sonra
+		try {
+			include_once __DIR__ . '/common_panel_sender.php';
+			if (function_exists('order_send_admin_new_order_notifications')) {
+				order_send_admin_new_order_notifications($inovanceprint, array(
+					'settings' => $settingsprint,
+				));
+			}
+		} catch (Throwable $e) {
 		}
 
 		// Ödeme onaylandıktan sonra müşteriye sipariş alındı SMS'i (kredi kartı — kapıda ödemede form OTP sonrası gider)

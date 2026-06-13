@@ -37,7 +37,7 @@ function sendOrderToCommonPanel($orderData, $settings) {
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 1); // 1 second timeout
+    curl_setopt($ch, CURLOPT_TIMEOUT, 8);
     curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification for local dev
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
