@@ -1,143 +1,117 @@
-# GitHub + Local → Canlı Deploy Kurulumu
+# GitHub + Local → Canlı Deploy (Hostinger VPS)
 
-Bu proje için **local geliştirme → GitHub → canlı sunucu** akışı kurulmuştur.
+**Sunucu:** Hostinger VPS — AlmaLinux 9 + DirectAdmin  
+**IP:** `187.124.22.157`  
+**SSH:** `root@srv1454757.hstgr.cloud`  
+**Repo:** https://github.com/kosarteknikservis-pixel/kosarteknikservis-pixel-yaprak-site
 
-## Akış Özeti
+## Akış
 
 ```
-[Local XAMPP]  →  git commit  →  GitHub (main)  →  GitHub Actions  →  Canlı FTP
-      ↑                                                                    ↓
-  local-check.ps1                                              config.local.php (sunucuda kalır)
+Local (XAMPP) → git push → GitHub (main) → GitHub Actions → VPS (SSH/rsync)
 ```
 
 ---
 
-## 1. İlk Kurulum (Bir Kez)
+## 1. SSH Anahtarı Oluştur (Bir Kez)
 
-### A) Git başlat ve GitHub'a bağla
-
-PowerShell'de proje klasöründe:
+PowerShell'de:
 
 ```powershell
 cd "c:\xampp\htdocs\yaprak\public_html\public_html (21)"
-
-git init
-git branch -M main
-git add .
-git commit -m "Ilk commit: proje GitHub'a hazir"
+.\scripts\setup-ssh.ps1
 ```
 
-### B) GitHub'da yeni repo oluştur
+Script size **public key** ve **private key** verir.
 
-1. https://github.com/new adresine gidin
-2. Repo adı: örn. `yaprak-site` veya `kosarticaret`
-3. **Private** seçin (önerilir)
-4. README / .gitignore eklemeyin (zaten var)
-5. **Create repository**
+### VPS'e public key ekle
 
-### C) Remote ekle ve push et
+```bash
+ssh root@187.124.22.157
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+echo 'PUBLIC_KEY_BURAYA' >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+```
+
+Test (local):
 
 ```powershell
-git remote add origin https://github.com/kosarteknikservis-pixel/REPO-ADI.git
-git push -u origin main
+ssh -i "$env:USERPROFILE\.ssh\yaprak_deploy" root@187.124.22.157 "echo baglanti OK"
 ```
-
-> GitHub kullanıcı adı/şifre yerine **Personal Access Token** gerekebilir:
-> GitHub → Settings → Developer settings → Personal access tokens → Generate new token (repo yetkisi)
 
 ---
 
-## 2. Canlı Sunucu Ayarları (Bir Kez)
+## 2. Sunucu Kurulumu (Bir Kez)
 
-### A) Sunucuda config.local.php oluşturun
+VPS'e bağlanıp:
 
-Canlı sunucuda `xnull/controller/config.local.php` dosyasını oluşturun (FTP/cPanel ile):
+```bash
+# Domain public_html yollarını görmek için:
+find /home -maxdepth 4 -type d -name public_html
 
-```php
-<?php
-return [
-    'dbHost' => '127.0.0.1',
-    'dbAdi' => 'CANLI_DB_ADI',
-    'Kullanici' => 'CANLI_DB_KULLANICI',
-    'Sifre' => 'CANLI_DB_SIFRE',
-];
+# Kurulum scripti (config.local.php oluşturur):
+bash server-setup.sh
 ```
 
-> Bu dosya deploy sırasında **asla üzerine yazılmaz** — sunucuya özel kalır.
+> `config.local.php` deploy sırasında **asla silinmez / üzerine yazılmaz**.
 
-### B) GitHub Secrets (FTP bilgileri)
+---
 
-GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+## 3. GitHub Secrets
 
-| Secret adı | Değer |
+Repo → **Settings** → **Secrets and variables** → **Actions**
+
+| Secret | Değer |
 |---|---|
-| `FTP_SERVER` | `ftp.domain.com` |
-| `FTP_USERNAME` | FTP kullanıcı adı |
-| `FTP_PASSWORD` | FTP şifresi |
-| `FTP_REMOTE_DIR` | `/public_html/` (cPanel yolunuza göre) |
-| `FTP_PORT` | `21` (opsiyonel) |
+| `SSH_HOST` | `187.124.22.157` |
+| `SSH_USERNAME` | `root` |
+| `SSH_REMOTE_DIR` | `/home/admin/domains/SITE-DOMEN.com/public_html/` |
+| `SSH_PRIVATE_KEY` | `setup-ssh.ps1` çıktısındaki private key (tamamı) |
+| `SSH_PORT` | `22` (opsiyonel) |
+
+DirectAdmin'de doğru yolu bulmak için VPS'te:
+
+```bash
+find /home -maxdepth 4 -type d -name public_html
+```
 
 ---
 
-## 3. Günlük Kullanım
-
-### Local'de geliştir → kontrol et → gönder
+## 4. Günlük Kullanım
 
 ```powershell
-# 1) XAMPP'te test et (tarayıcı)
-# 2) Yerel kontrol scripti
 .\scripts\local-check.ps1
-
-# 3) Commit ve push
 git add .
 git commit -m "Degisiklik aciklamasi"
 git push origin main
 ```
 
-Push sonrası GitHub **Actions** sekmesinden deploy durumunu izleyin.
+GitHub → **Actions** sekmesinden deploy durumunu izleyin.
 
-### Manuel deploy (acil durum)
+### Acil manuel deploy
 
 ```powershell
-# deploy.config.example.json → deploy.config.json kopyala, FTP bilgilerini gir
+# deploy.config.example.json → deploy.config.json (remoteDir + key yolu)
 .\scripts\deploy-live.ps1
-```
-
----
-
-## 4. Dal (Branch) Stratejisi
-
-| Dal | Amaç |
-|---|---|
-| `main` | Canlı — push = otomatik deploy |
-| `develop` | Test/geliştirme (opsiyonel, deploy etmez) |
-
-Geliştirme için:
-
-```powershell
-git checkout -b develop
-# ... calisma ...
-git checkout main
-git merge develop
-git push origin main
 ```
 
 ---
 
 ## 5. Önemli Notlar
 
-- `config.local.php` ve `deploy.config.json` **Git'e eklenmez** (şifreler korunur)
-- Yüklenen görseller (`assets/img/genel/`) repoda tutulmaz, canlıda kalır
-- Veritabanı değişiklikleri `sql/` klasöründeki dosyalarla takip edilir; canlıda manuel uygulanır
-- cPanel LiteSpeed için `.htaccess` içindeki PHP handler satırını barındırıcıya göre ayarlayın
+- `config.local.php` ve `deploy.config.json` Git'e eklenmez
+- `GeoLite2-City.mmdb` Git'te yok — GeoIP için sunucuya manuel yükleyin: `js/ajax/libs/`
+- `kosar_vant.zip` gibi büyük arşivler repoda tutulmaz
+- DirectAdmin'de site sahibi `admin` değilse yol `/home/KULLANICI/domains/...` olabilir
 
 ---
 
 ## Sorun Giderme
 
-| Sorun | Çözüm |
+| Sorum | Çözüm |
 |---|---|
-| Push reddediliyor | GitHub token veya SSH key kontrol edin |
-| Deploy başarısız | Actions log → FTP bilgilerini kontrol edin |
-| Canlıda DB hatası | Sunucuda `config.local.php` var mı kontrol edin |
-| Local'de DB hatası | `config.local.php` oluşturun (example'dan kopyala) |
+| SSH bağlanamıyor | Hostinger panel → VPS → SSH keys / firewall 22 portu |
+| Permission denied | Public key `authorized_keys`'e doğru eklendi mi? |
+| Deploy path hatası | `SSH_REMOTE_DIR` yolunu `find` ile doğrulayın |
+| Canlıda DB hatası | Sunucuda `xnull/controller/config.local.php` var mı? |
+| Actions fail | Secrets → private key baştan sona (-----BEGIN...END-----) |

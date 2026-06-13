@@ -1,9 +1,7 @@
 name: Canliya Deploy
 
 on:
-  # Manuel tetikleme: GitHub → Actions → Canliya Deploy → Run workflow
   workflow_dispatch:
-  # main dalına push edildiğinde otomatik deploy
   push:
     branches:
       - main
@@ -14,7 +12,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: FTP ile canlı sunucuya gönder
+    name: Hostinger VPS (SSH) deploy
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -22,24 +20,26 @@ jobs:
       - name: Kodu indir
         uses: actions/checkout@v4
 
-      - name: FTP Deploy
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: VPS'e rsync ile gonder
+        uses: burnett01/rsync-deployments@7.0.1
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT || 21 }}
-          protocol: ftp
-          local-dir: ./
-          server-dir: ${{ secrets.FTP_REMOTE_DIR || '/public_html/' }}
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/config.local.php
-            **/deploy.config.json
-            **/debug_integrity_log.txt
-            **/xnull/debug_integrity_log.txt
-            **/xnull/cloaker/blocked_ips.txt
-            **/.gitignore
-            **/GITHUB-KURULUM.md
-            **/scripts/**
+          switches: -avzr --delete --exclude=.git --exclude=.github --exclude=xnull/controller/config.local.php --exclude=deploy.config.json --exclude=debug_integrity_log.txt --exclude=xnull/debug_integrity_log.txt --exclude=xnull/cloaker/blocked_ips.txt --exclude=js/ajax/libs/GeoLite2-City.mmdb --exclude=*.zip --exclude=GITHUB-KURULUM.md --exclude=scripts
+          path: ./
+          remote_path: ${{ secrets.SSH_REMOTE_DIR }}
+          remote_host: ${{ secrets.SSH_HOST }}
+          remote_user: ${{ secrets.SSH_USERNAME }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          remote_port: ${{ secrets.SSH_PORT || 22 }}
+
+      - name: Dosya izinlerini duzelt
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            REMOTE="${{ secrets.SSH_REMOTE_DIR }}"
+            find "$REMOTE" -type d -exec chmod 755 {} \;
+            find "$REMOTE" -type f -exec chmod 644 {} \;
+            if [ -f "$REMOTE/.htaccess" ]; then chmod 644 "$REMOTE/.htaccess"; fi
