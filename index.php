@@ -3897,5 +3897,10 @@ $(document).on('submit', '#myform', function() {
     }
 </style>
 
+<?php
+require_once __DIR__ . '/include/legal-pages.php';
+legal_pages_render_footer($db, $settingsprint, $whatsappprint ?? null);
+?>
+
 </body>
 </html>
