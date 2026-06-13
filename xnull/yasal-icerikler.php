@@ -99,9 +99,9 @@ $checks = array(
 				<div class="card-heading card-default">Yasal Sayfa Düzenleme</div>
 				<div class="card-block">
 					<?php if ($siteBase !== '') { ?>
-						<p><a href="<?php echo htmlspecialchars($siteBase . '/teslimat-kosullari.php', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">Teslimat Koşulları</a> — <a href="teslimat-kosullari-yonet.php">Düzenle</a></p>
-						<p><a href="<?php echo htmlspecialchars($siteBase . '/satis-politikasi.php', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">Satış Politikası</a> — <a href="satis-politikasi-yonet.php">Düzenle</a></p>
-						<p><a href="<?php echo htmlspecialchars($siteBase . '/iptal-iade.php', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">İptal ve İade</a> — <a href="iptal-iade-yonet.php">Düzenle</a></p>
+						<p><a href="<?php echo htmlspecialchars($siteBase . '/teslimat-kosullari', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">Teslimat Koşulları</a> — <a href="teslimat-kosullari-yonet.php">Düzenle</a></p>
+						<p><a href="<?php echo htmlspecialchars($siteBase . '/satis-politikasi', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">Satış Politikası</a> — <a href="satis-politikasi-yonet.php">Düzenle</a></p>
+						<p><a href="<?php echo htmlspecialchars($siteBase . '/iptal-iade', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">İptal ve İade</a> — <a href="iptal-iade-yonet.php">Düzenle</a></p>
 					<?php } else { ?>
 						<p class="text-muted">Site URL tanımlı değil. Genel ayarlardan site adresini kontrol edin.</p>
 					<?php } ?>
