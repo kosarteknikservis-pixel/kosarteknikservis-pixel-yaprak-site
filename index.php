@@ -276,7 +276,7 @@ if (typeof gtag === 'function') {
 
 
 
-<div dir="ltr" style="text-align:left;">
+<div id="wrapper" dir="ltr" class="clearfix" style="text-align:left;">
   <section class="vitrin-galeri-section" style="align-items: center;padding: 0;margin: 0;">
     <div class="vitrin-galeri-outer">
           <?php
@@ -395,6 +395,8 @@ if (typeof gtag === 'function') {
         overflow: visible !important;
         width: 100% !important;
         max-width: 100% !important;
+        background-color: #f8fafc !important;
+        background-image: none !important;
       }
       .vitrin-galeri-section,
       .vitrin-galeri-outer {
@@ -469,6 +471,16 @@ if (typeof gtag === 'function') {
 
   <section id="siparis" style="padding: 0;">
     <style>
+      /*
+       * Tema (apple.css): section { background-color: var(--renk1); overflow: hidden; }
+       * Sipariş bölümü koyu zemin + taşan ürün kartları kesiliyordu.
+       */
+      section#siparis {
+        background-color: #f8fafc !important;
+        background-image: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+      }
       /* --- Premium Softer Style --- */
       .order-wrap {
         background: #ffffff;
@@ -1034,7 +1046,12 @@ if (typeof gtag === 'function') {
         box-shadow: 0 2px 10px rgba(249, 115, 22, 0.12);
       }
       .order-products-grid > .product-item:has(.new-design-card) {
-        padding-top: 10px !important;
+        padding-top: 14px !important;
+        margin-top: 4px;
+        overflow: visible;
+      }
+      .order-products-grid.order-products-grid--list-rows > .product-item {
+        overflow: visible;
       }
       .order-products-grid > .product-item:hover {
         border-color: rgba(249, 115, 22, 0.85);
@@ -2394,7 +2411,34 @@ window.onclick = function(event) {
 }
 </script>
 
-</div><!-- /dir=ltr — ana içerik; footer’daki fazla </div> kaldırıldı, kapanış burada -->
+<!-- NEDEN BİZ? BÖLÜMÜ -->
+<?php if (!isset($settingsprint['ayar_nedenbiz_on']) || $settingsprint['ayar_nedenbiz_on'] == 1) { 
+    $nedenBizMargin = (isset($settingsprint['ayar_altgorsel_on']) && $settingsprint['ayar_altgorsel_on'] == 1) ? '60px' : '0px';
+?>
+<div style="background: #f8fafc; padding: 50px 0; border-top: 1px solid #e2e8f0; margin-top: <?php echo $nedenBizMargin; ?>;">
+    <div class="container" style="max-width: 1000px; padding: 0 20px;">
+        <div style="display: flex; flex-direction: column; gap: 20px; max-width: 560px; margin: 0 auto;">
+            <div style="width: 100%; text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                <i class="fa fa-flash" style="font-size: 32px; color: #f59e0b; margin-bottom: 15px;"></i>
+                <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Aynı Gün Kargo</h4>
+                <p style="color: #64748b; font-size: 0.9rem;">Saat 16:00'ya kadar verilen siparişler aynı gün kargoda.</p>
+            </div>
+            <div style="width: 100%; text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                <i class="fa fa-check-circle" style="font-size: 32px; color: #22c55e; margin-bottom: 15px;"></i>
+                <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Orijinal Ürün</h4>
+                <p style="color: #64748b; font-size: 0.9rem;">Tüm ürünlerimiz %100 orijinal ve faturalı olarak gönderilir.</p>
+            </div>
+            <div style="width: 100%; text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                <i class="fa fa-headphones" style="font-size: 32px; color: #3b82f6; margin-bottom: 15px;"></i>
+                <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">7/24 Destek</h4>
+                <p style="color: #64748b; font-size: 0.9rem;">Satış öncesi ve sonrası sorularınız için yanınızdayız.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php } ?>
+
+</div><!-- /#wrapper — ana içerik -->
 
 <?php include 'include/footer.php'; ?>
 
@@ -3760,56 +3804,6 @@ $(document).on('submit', '#myform', function() {
     }
 });
 </script>
-
-
-<!-- NEDEN BİZ? BÖLÜMÜ -->
-<?php if (!isset($settingsprint['ayar_nedenbiz_on']) || $settingsprint['ayar_nedenbiz_on'] == 1) { 
-    $nedenBizMargin = (isset($settingsprint['ayar_altgorsel_on']) && $settingsprint['ayar_altgorsel_on'] == 1) ? '60px' : '0px';
-?>
-<div style="background: #f8fafc; padding: 50px 0; border-top: 1px solid #e2e8f0; margin-top: <?php echo $nedenBizMargin; ?>;">
-    <div class="container" style="max-width: 1000px; padding: 0 20px;">
-        <div style="display: flex; flex-direction: column; gap: 20px; max-width: 560px; margin: 0 auto;">
-            <div style="width: 100%; text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                <i class="fa fa-flash" style="font-size: 32px; color: #f59e0b; margin-bottom: 15px;"></i>
-                <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Aynı Gün Kargo</h4>
-                <p style="color: #64748b; font-size: 0.9rem;">Saat 16:00'ya kadar verilen siparişler aynı gün kargoda.</p>
-            </div>
-            <div style="width: 100%; text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                <i class="fa fa-check-circle" style="font-size: 32px; color: #22c55e; margin-bottom: 15px;"></i>
-                <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">Orijinal Ürün</h4>
-                <p style="color: #64748b; font-size: 0.9rem;">Tüm ürünlerimiz %100 orijinal ve faturalı olarak gönderilir.</p>
-            </div>
-            <div style="width: 100%; text-align: center; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-                <i class="fa fa-headphones" style="font-size: 32px; color: #3b82f6; margin-bottom: 15px;"></i>
-                <h4 style="font-weight: 800; color: #1e293b; margin-bottom: 8px;">7/24 Destek</h4>
-                <p style="color: #64748b; font-size: 0.9rem;">Satış öncesi ve sonrası sorularınız için yanınızdayız.</p>
-            </div>
-        </div>
-    </div>
-</div>
-<?php } ?>
-
-<!-- FOOTER (ALT BİLGİ) -->
-<?php if (!isset($settingsprint['ayar_footer_on']) || $settingsprint['ayar_footer_on'] == 1) { ?>
-<footer style="background: #1e293b; padding: 30px 0; color: #94a3b8; text-align: center; font-size: 0.9rem;">
-    <div class="container">
-        <div style="margin-bottom: 15px;">
-            <span style="color: #cbd5e1; font-size: 14px; font-weight: 500;">
-                <i class="fa fa-lock" style="color: #22c55e; margin-right: 5px;"></i>
-                Bu sitede yapılan alışverişler 256-Bit SSL sertifikası ve 3D Secure güvenli ödeme sistemi ile korunmaktadır.
-            </span>
-        </div>
-        <div>
-            &copy; 2026 Tüm Hakları Saklıdır. Bu site güvenli ödeme altyapısı kullanmaktadır.
-        </div>
-    </div>
-</footer>
-<?php } ?>
-
-
-
-
-
 
 
 <!-- RESET: Sticky Mobile Order Bar (Fixed Bottom) -->
