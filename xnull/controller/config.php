@@ -94,6 +94,11 @@ $host = isset($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : 'localho
 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
 $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
 
+// Yasal sayfa alt klasöründen (teslimat-kosullari/index.php vb.) yüklenince SITE_URL kök kalsın
+if ($script_name !== '' && preg_match('#/(teslimat-kosullari|satis-politikasi|iptal-iade)(/index\.php)?$#', $script_name)) {
+	$script_name = preg_replace('#/(teslimat-kosullari|satis-politikasi|iptal-iade)(/index\.php)?$#', '/index.php', $script_name);
+}
+
 // Determine the base path of the project (e.g., /t1/ or /)
 $base_path = str_replace('\\', '/', dirname($script_name));
 if (strpos($base_path, '/xnull') !== false) {

@@ -104,9 +104,11 @@ if (!function_exists('panel_render_menu_recursive')) {
 if ($ayar_menu_on == 1) {
     $logo_tip = isset($settingsprint['ayar_logo_tip']) ? $settingsprint['ayar_logo_tip'] : 0;
     $logo_metin = isset($settingsprint['ayar_logo_metin']) ? $settingsprint['ayar_logo_metin'] : ($settingsprint['ayar_firmaadi'] ?? '');
-    $menu_site_base = (defined('SITE_URL') && SITE_URL !== '')
-        ? rtrim(SITE_URL, '/') . '/'
-        : rtrim((string)($settingsprint['ayar_siteurl'] ?? ''), '/') . '/';
+    $menu_site_base = !empty($settingsprint['ayar_siteurl'])
+        ? rtrim((string) $settingsprint['ayar_siteurl'], '/') . '/'
+        : ((defined('SITE_URL') && SITE_URL !== '')
+            ? rtrim(SITE_URL, '/') . '/'
+            : '/');
 ?>
 <!-- Premium Header -->
 <header id="main-header" class="header-glass">
