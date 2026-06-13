@@ -65,7 +65,7 @@ Repo → **Settings** → **Secrets and variables** → **Actions**
 |---|---|
 | `SSH_HOST` | `187.124.22.157` |
 | `SSH_USERNAME` | `root` |
-| `SSH_REMOTE_DIR` | `/home/admin/domains/SITE-DOMEN.com/public_html/` |
+| `SSH_REMOTE_DIR` | `/home/admin/domains/kosarvantilator.com/public_html/` |
 | `SSH_PRIVATE_KEY` | `setup-ssh.ps1` çıktısındaki private key (tamamı) |
 | `SSH_PORT` | `22` (opsiyonel) |
 

@@ -6,7 +6,7 @@
     "port": 22,
     "username": "root",
     "privateKeyPath": "C:\\Users\\PC\\.ssh\\yaprak_deploy",
-    "remoteDir": "/home/admin/domains/SITE-DOMENINIZ.com/public_html/"
+    "remoteDir": "/home/admin/domains/kosarvantilator.com/public_html/"
   },
   "github": {
     "remote": "https://github.com/kosarteknikservis-pixel/kosarteknikservis-pixel-yaprak-site.git",
