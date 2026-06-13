@@ -33,7 +33,11 @@ $verify_notice = '';
 $verify_notice_type = '';
 $verify_row = null;
 $verify_direct_link = '';
-$verification_enabled = !isset($settingsprint['ayar_siparis_dogrulama_on']) || (int)$settingsprint['ayar_siparis_dogrulama_on'] === 1;
+$siparis_is_online_card = $siparis_detay
+  && function_exists('order_payment_is_online_card')
+  && order_payment_is_online_card((int) ($siparis_detay['siparis_odemeid'] ?? 0));
+$verification_enabled = (!isset($settingsprint['ayar_siparis_dogrulama_on']) || (int)$settingsprint['ayar_siparis_dogrulama_on'] === 1)
+  && !$siparis_is_online_card;
 if ($verification_enabled && $siparis_id > 0) {
   try {
     $verify_row = ov_fetch_by_order($db, $siparis_id);

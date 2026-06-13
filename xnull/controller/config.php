@@ -246,6 +246,59 @@ if ( ! function_exists( 'buildNetgsmOrderReceivedSms' ) ) {
 	}
 }
 
+/** Ödeme alanından (örn. "Kapıda-3") veya odeme_id ile PayTR / online kart ödemesi mi? */
+if ( ! function_exists( 'order_payment_parse_id' ) ) {
+	function order_payment_parse_id( $odemeRaw ) {
+		$raw = trim( (string) $odemeRaw );
+		if ( preg_match( '/-(\d+)$/', $raw, $m ) ) {
+			return (int) $m[1];
+		}
+		if ( ctype_digit( $raw ) ) {
+			return (int) $raw;
+		}
+		return 0;
+	}
+}
+
+if ( ! function_exists( 'order_payment_is_online_card' ) ) {
+	function order_payment_is_online_card( $odemeIdOrRaw ) {
+		$id = is_numeric( $odemeIdOrRaw ) ? (int) $odemeIdOrRaw : order_payment_parse_id( $odemeIdOrRaw );
+		// guvenli-odeme.php (PayTR) — front-order-flow ile aynı id
+		return $id === 6;
+	}
+}
+
+/** Kapıda / havale vb. için SMS OTP; kredi kartında (PayTR) hayır */
+if ( ! function_exists( 'order_payment_needs_sms_verify' ) ) {
+	function order_payment_needs_sms_verify( $odemeIdOrRaw, $settings = null ) {
+		global $settingsprint;
+		if ( ! is_array( $settings ) ) {
+			$settings = isset( $settingsprint ) && is_array( $settingsprint ) ? $settingsprint : array();
+		}
+		$globalOn = ! isset( $settings['ayar_siparis_dogrulama_on'] ) || (int) $settings['ayar_siparis_dogrulama_on'] === 1;
+		if ( ! $globalOn || order_payment_is_online_card( $odemeIdOrRaw ) ) {
+			return false;
+		}
+		return true;
+	}
+}
+
+if ( ! function_exists( 'order_send_customer_confirmation_sms' ) ) {
+	function order_send_customer_confirmation_sms( $customerName, $customerTel, $productName ) {
+		if ( ! function_exists( 'sendTransactionalSms' ) ) {
+			return false;
+		}
+		$tel = preg_replace( '/\D+/', '', (string) $customerTel );
+		if ( $tel === '' ) {
+			return false;
+		}
+		$msg = function_exists( 'buildNetgsmOrderReceivedSms' )
+			? buildNetgsmOrderReceivedSms( $customerName, $productName )
+			: ( 'Sayın ' . trim( (string) $customerName ) . ', siparişiniz alınmıştır. 1-3 iş günü içerisinde teslim edilecektir.' );
+		return sendTransactionalSms( $tel, $msg );
+	}
+}
+
 /**
  * NetGSM SMS — REST v2 (JSON + Basic Auth), Türkçe: encoding TR.
  * https://api.netgsm.com.tr/sms/rest/v2/send

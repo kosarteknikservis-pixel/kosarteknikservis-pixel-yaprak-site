@@ -93,6 +93,18 @@ if( $hash != $post['hash'] )
 			// Eski veritabanında kolon yoksa en azından durumu bozmamak için yut
 		}
 
+		// Ödeme onaylandıktan sonra müşteriye sipariş alındı SMS'i (kredi kartı — kapıda ödemede form OTP sonrası gider)
+		try {
+			if (function_exists('order_send_customer_confirmation_sms')) {
+				order_send_customer_confirmation_sms(
+					(string) ($inovanceprint['siparis_ad'] ?? ''),
+					(string) ($inovanceprint['siparis_tel'] ?? ''),
+					(string) ($inovanceprint['siparis_urun'] ?? '')
+				);
+			}
+		} catch (Throwable $e) {
+		}
+
 	} else {
 		// Başarısız / iptal bildirimi — kart ödemesi başarısız olarak işaretle
 		$oid = preg_replace('/[^0-9]/', '', (string) $post['merchant_oid']);

@@ -1042,8 +1042,8 @@ $order_index_products_hash = $order_index_url . '#urun-kartlari';
           <span class="order-trust-item__mark" aria-hidden="true"><i class="fa <?php echo $order_sms_verify_on ? 'fa-mobile' : 'fa-check-circle'; ?>"></i></span>
           <div class="order-trust-item__text">
             <?php if ($order_sms_verify_on) { ?>
-            <strong>SMS ile sipariş doğrulama</strong>
-            <span>Telefon numaranıza tek kullanımlık kod gönderilir; yetkisiz işlemlerin önüne geçilir.</span>
+            <strong>Kapıda ödemede SMS doğrulama</strong>
+            <span>Kapıda ödeme seçtiğinizde telefonunuza tek kullanımlık kod gönderilir; kredi kartı ödemesinde ek SMS doğrulaması yapılmaz.</span>
             <?php } else { ?>
             <strong>Şeffaf sipariş süreci</strong>
             <span>Siparişiniz kayda alınır; gerekirse ekibimiz sizinle iletişime geçerek süreci netleştirir.</span>

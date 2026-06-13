@@ -39,7 +39,9 @@ if (!function_exists('normalizeOrderTextUtf8')) {
   }
 }
 
-$verification_enabled_order = !isset($settingsprint['ayar_siparis_dogrulama_on']) || (int)$settingsprint['ayar_siparis_dogrulama_on'] === 1;
+$pre_order_needs_otp = function_exists('order_payment_needs_sms_verify')
+  ? order_payment_needs_sms_verify($_POST['odeme'] ?? '', $settingsprint)
+  : (!isset($settingsprint['ayar_siparis_dogrulama_on']) || (int)$settingsprint['ayar_siparis_dogrulama_on'] === 1);
 
 if ($DemCont == 1) {
   header('Location:?demo=ok');
@@ -53,7 +55,7 @@ if (isset($settingsprint['ayar_cookie_on']) && $settingsprint['ayar_cookie_on'] 
   }
 }
 
-if ($verification_enabled_order) {
+if ($pre_order_needs_otp) {
   if (isset($_POST['otp_stage_verify_submit'])) {
     $pending = isset($_SESSION['front_order_verify']) && is_array($_SESSION['front_order_verify']) ? $_SESSION['front_order_verify'] : null;
     $otpInput = preg_replace('/\D+/', '', (string)($_POST['otp_code_front'] ?? ''));
@@ -281,7 +283,12 @@ if (strlen($telDigits) < 10 || strlen($telDigits) > 12) {
 
 $ad = htmlspecialchars($adRaw, ENT_QUOTES, 'UTF-8');
 $is_front_verified = !empty($_POST['otp_stage_passed']);
-$initial_order_status = ($verification_enabled_order && !$is_front_verified) ? -2 : 0;
+$odeme_id_int = (int) $odeme[1];
+$is_online_card = function_exists('order_payment_is_online_card') && order_payment_is_online_card($odeme_id_int);
+$needs_sms_verify = function_exists('order_payment_needs_sms_verify')
+  ? order_payment_needs_sms_verify($odeme_id_int, $settingsprint)
+  : (!isset($settingsprint['ayar_siparis_dogrulama_on']) || (int)$settingsprint['ayar_siparis_dogrulama_on'] === 1);
+$initial_order_status = ($needs_sms_verify && !$is_front_verified) ? -2 : 0;
 
 $insert = false;
 try {
@@ -306,7 +313,7 @@ include_once __DIR__ . '/../common_panel_sender.php';
 $verification_sms_sent = false;
 $verification_link = '';
 $verification_expires = '';
-$verification_enabled = $verification_enabled_order && !$is_front_verified;
+$verification_enabled = $needs_sms_verify && !$is_front_verified;
 if (function_exists('sendOrderToCommonPanel')) {
   $last_order_id = $db->lastInsertId();
   $commonData = array(
@@ -358,7 +365,7 @@ $sip = (int)($sipprint['siparis_id'] ?? 0);
 
 $responseFlushed = false;
 if ($sip > 0) {
-  if ((int)$odeme[1] == 6) {
+  if ($is_online_card) {
     $redirectTarget = "guvenli-odeme.php?status=" . $sip;
   } else {
     $verifyFlag = (!empty($verification_link) ? '&dogrulama=bekliyor' : '');
@@ -459,14 +466,17 @@ try {
 } catch (Exception $e) {}
 
 try {
-  if (function_exists('sendTransactionalSms') && !$verification_enabled) {
+  // Kapıda ödeme: SMS OTP sonrası sipariş onay mesajı. Kredi kartı: PayTR bildirimi (pay_int.php).
+  if (!$verification_enabled && !$is_online_card) {
     $customer_ad = $sipprint['siparis_ad'];
     $customer_tel = $sipprint['siparis_tel'];
     $urun_txt = isset($sipprint['siparis_urun']) ? $sipprint['siparis_urun'] : '';
-    $sms_msg = function_exists('buildNetgsmOrderReceivedSms')
-      ? buildNetgsmOrderReceivedSms($customer_ad, $urun_txt)
-      : ('Sayın ' . $customer_ad . ', siparişiniz alınmıştır. 1-3 iş günü içerisinde teslim edilecektir.');
-    if (!empty($customer_tel)) {
+    if (!empty($customer_tel) && function_exists('order_send_customer_confirmation_sms')) {
+      order_send_customer_confirmation_sms($customer_ad, $customer_tel, $urun_txt);
+    } elseif (!empty($customer_tel) && function_exists('sendTransactionalSms')) {
+      $sms_msg = function_exists('buildNetgsmOrderReceivedSms')
+        ? buildNetgsmOrderReceivedSms($customer_ad, $urun_txt)
+        : ('Sayın ' . $customer_ad . ', siparişiniz alınmıştır. 1-3 iş günü içerisinde teslim edilecektir.');
       sendTransactionalSms($customer_tel, $sms_msg);
     }
   }
@@ -476,7 +486,7 @@ if (isset($_SESSION['urunler'])) {
   unset($_SESSION['urunler']);
 }
 if (!$responseFlushed) {
-  if ($odeme[1] == 6) {
+  if ($is_online_card) {
     Header("Location:guvenli-odeme.php?status=" . $sip);
     exit;
   }
