@@ -4,8 +4,10 @@ include 'include/head.php';
 $GuvenliGet = htmlspecialchars(trim((string) ($_GET['status'] ?? '')), ENT_QUOTES, 'UTF-8');
 $odeme_bekleyen = function_exists('order_status_payment_pending') ? order_status_payment_pending() : -3;
 $siparissor=$db->prepare("SELECT * from siparis where siparis_id=:guvenli and (siparis_durum=0 OR siparis_durum=:odeme_bekleyen)");
-$siparissor->bindValue(':odeme_bekleyen', $odeme_bekleyen, PDO::PARAM_INT);
-$siparissor->execute(array('guvenli' => $GuvenliGet));
+$siparissor->execute(array(
+	'guvenli' => $GuvenliGet,
+	'odeme_bekleyen' => $odeme_bekleyen,
+));
 $sipprint=$siparissor->fetch(PDO::FETCH_ASSOC); 
 
 $siparisson=$db->prepare("SELECT * from siparis order by siparis_id DESC Limit 1");
