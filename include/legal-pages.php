@@ -266,22 +266,136 @@ if (!function_exists('legal_pages_render_public_shell')) {
 
 		$patternUrl = rtrim(SITE_URL, '/') . '/xnull/assets/img/genel/pattern10.png';
 		$siteBase   = legal_pages_site_base($settingsprint ?? array());
+		$maxWidth   = isset($settingsprint['ayar_harita']) && (int) $settingsprint['ayar_harita'] > 0
+			? (int) $settingsprint['ayar_harita']
+			: 960;
 		?>
-<section id="page-title" class="page-title-classic" style="background:url(<?php echo htmlspecialchars($patternUrl, ENT_QUOTES, 'UTF-8'); ?>)">
-	<div class="container">
-		<div class="text-center">
-			<h1 style="font-size:1.6rem;"><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></h1>
-		</div>
+<style>
+.legal-page-shell { background: #f8fafc; padding: 40px 0 56px; }
+.legal-page-shell .legal-page-card {
+	background: #fff;
+	border-radius: 12px;
+	box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+	border: 1px solid #e2e8f0;
+	overflow: hidden;
+}
+.legal-page-shell .legal-page-card__body { padding: 28px 24px; }
+.legal-page-shell .legal-page-content {
+	color: #334155;
+	line-height: 1.85;
+	font-size: 1.05rem;
+	font-family: "Open Sans", "Segoe UI", sans-serif;
+}
+.legal-page-shell .legal-page-content h2,
+.legal-page-shell .legal-page-content h3,
+.legal-page-shell .legal-page-content h4 {
+	color: #1e293b;
+	font-weight: 700;
+	margin: 1.75rem 0 0.75rem;
+	line-height: 1.35;
+	font-family: Montserrat, "Segoe UI", sans-serif;
+}
+.legal-page-shell .legal-page-content h3 { font-size: 1.2rem; }
+.legal-page-shell .legal-page-content p { margin: 0 0 1rem; }
+.legal-page-shell .legal-page-content ul,
+.legal-page-shell .legal-page-content ol { margin: 0 0 1.25rem 1.25rem; padding: 0; }
+.legal-page-shell .legal-page-content li { margin-bottom: 0.45rem; }
+.legal-page-shell .legal-page-content a { color: var(--renk1, #2563eb); text-decoration: underline; }
+.legal-page-shell .legal-page-content img { max-width: 100%; height: auto; border-radius: 8px; }
+.legal-page-shell .legal-page-actions {
+	margin-top: 28px;
+	padding-top: 22px;
+	border-top: 2px solid #f1f5f9;
+	text-align: center;
+}
+.legal-page-shell .btn-legal-back {
+	display: inline-block;
+	background: linear-gradient(135deg, var(--renk1, #2563eb) 0%, var(--renk2, #1d4ed8) 100%);
+	color: #fff !important;
+	border: none;
+	padding: 12px 34px;
+	border-radius: 30px;
+	font-size: 0.95rem;
+	font-weight: 700;
+	text-decoration: none !important;
+	box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.legal-page-shell .btn-legal-back:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 12px 28px rgba(37, 99, 235, 0.32);
+	color: #fff !important;
+}
+#legal-page-title {
+	background: var(--renk1, #1e293b) url(<?php echo htmlspecialchars($patternUrl, ENT_QUOTES, 'UTF-8'); ?>) center/cover no-repeat;
+	padding: 120px 0 72px;
+	position: relative;
+}
+#legal-page-title::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.72) 100%);
+}
+#legal-page-title .container { position: relative; z-index: 1; }
+#legal-page-title h1 {
+	color: #fff;
+	font-weight: 800;
+	font-size: clamp(1.6rem, 4vw, 2.6rem);
+	margin: 0 0 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-family: Montserrat, "Segoe UI", sans-serif;
+}
+#legal-page-title .breadcrumb {
+	background: transparent;
+	justify-content: center;
+	margin: 0;
+	padding: 0;
+}
+#legal-page-title .breadcrumb-item,
+#legal-page-title .breadcrumb-item a {
+	color: rgba(255,255,255,0.88);
+	font-size: 0.92rem;
+}
+#legal-page-title .breadcrumb-item.active { color: #fff; }
+@media (max-width: 991px) {
+	#legal-page-title { padding: 96px 0 56px; }
+}
+@media (max-width: 767px) {
+	.legal-page-shell { padding: 24px 0 40px; }
+	.legal-page-shell .legal-page-card__body { padding: 20px 16px; }
+	.legal-page-shell .legal-page-content { font-size: 1rem; line-height: 1.75; }
+	#legal-page-title { padding: 88px 0 48px; }
+}
+</style>
+
+<section id="legal-page-title">
+	<div class="container text-center">
+		<h1><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></h1>
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item"><a href="<?php echo htmlspecialchars($siteBase . '/', ENT_QUOTES, 'UTF-8'); ?>">Anasayfa</a></li>
+			<li class="breadcrumb-item active" aria-current="page"><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></li>
+		</ol>
 	</div>
 </section>
-<section style="background:#fff;padding:30px 0 10px;">
-	<div class="container" style="max-width:860px;">
-		<div class="legal-page-content" style="line-height:1.7;color:#334155;font-size:15px;">
-			<?php echo $pageBody; ?>
+
+<section id="content" class="legal-page-shell">
+	<div class="container clearfix" style="max-width: <?php echo (int) $maxWidth; ?>px; margin: 0 auto;">
+		<div class="row justify-content-center">
+			<div class="col-lg-11 col-xl-10">
+				<div class="legal-page-card">
+					<div class="legal-page-card__body">
+						<div class="legal-page-content entry-content">
+							<?php echo $pageBody; ?>
+						</div>
+						<div class="legal-page-actions">
+							<a href="<?php echo htmlspecialchars($siteBase . '/', ENT_QUOTES, 'UTF-8'); ?>" class="btn-legal-back">Siteye Dön</a>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
-		<p style="margin:28px 0 10px;">
-			<a href="<?php echo htmlspecialchars($siteBase . '/', ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-primary" style="border-radius:8px;">Siteye Dön</a>
-		</p>
 	</div>
 </section>
 		<?php
