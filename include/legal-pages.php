@@ -187,10 +187,14 @@ if (!function_exists('legal_pages_fetch_row')) {
 
 if (!function_exists('legal_pages_site_base')) {
 	function legal_pages_site_base(array $settings) {
+		$fromSettings = rtrim((string) ($settings['ayar_siteurl'] ?? ''), '/');
+		if ($fromSettings !== '') {
+			return $fromSettings;
+		}
 		if (defined('SITE_URL') && SITE_URL !== '') {
 			return rtrim(SITE_URL, '/');
 		}
-		return rtrim((string) ($settings['ayar_siteurl'] ?? ''), '/');
+		return '';
 	}
 }
 

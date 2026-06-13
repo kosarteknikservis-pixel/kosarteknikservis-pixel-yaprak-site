@@ -82,6 +82,7 @@ ServerSignature Off
 RedirectMatch 301 (?i)^/teslimat-kosullari/?$ /teslimat-kosullari.php
 RedirectMatch 301 (?i)^/satis-politikasi/?$ /satis-politikasi.php
 RedirectMatch 301 (?i)^/iptal-iade/?$ /iptal-iade.php
+RedirectMatch 301 (?i)^/gizlilik/?$ /gizlilik.php
 
 <IfModule mod_rewrite.c>
 # RewriteBase bazı kurulumlarda (ör. sanal host kökü = nir) yanlış olunca kurallar çalışmaz.
@@ -93,13 +94,13 @@ RewriteBase /
 RewriteRule ^teslimat-kosullari/?$ teslimat-kosullari/index.php [NC,L]
 RewriteRule ^satis-politikasi/?$ satis-politikasi/index.php [NC,L]
 RewriteRule ^iptal-iade/?$ iptal-iade/index.php [NC,L]
+RewriteRule ^gizlilik/?$ gizlilik/index.php [NC,L]
 
 RewriteRule ^robots\.txt$ robots.php [NC,L]
 RewriteRule ^sitemap\.xml$ sitemap.php [NC,L]
 
 RewriteRule ^siparis-onay$ siparis-onay.php [NC,L]
 RewriteRule ^sozlesme$ sozlesme.php [NC,L]
-RewriteRule ^gizlilik$ gizlilik.php [NC,L]
 RewriteRule ^guvenli-odeme$ guvenli-odeme.php [NC,L]
 RewriteRule ^sayfa/([0-9a-zA-Z-_]+)$ sayfa.php?slug=$1 [NC,L,QSA]
 RewriteRule ^urun/([0-9a-zA-Z-_]+)$ index.php [NC,L]
