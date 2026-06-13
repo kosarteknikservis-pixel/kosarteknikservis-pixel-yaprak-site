@@ -20,16 +20,34 @@ jobs:
       - name: Kodu indir
         uses: actions/checkout@v4
 
+      - name: SSH baglantisini hazirla
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 22 -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
       - name: VPS'e rsync ile gonder
-        uses: burnett01/rsync-deployments@7.0.1
-        with:
-          switches: -avzr --delete --exclude=.git --exclude=.github --exclude=xnull/controller/config.local.php --exclude=deploy.config.json --exclude=debug_integrity_log.txt --exclude=xnull/debug_integrity_log.txt --exclude=xnull/cloaker/blocked_ips.txt --exclude=js/ajax/libs/GeoLite2-City.mmdb --exclude=*.zip --exclude=GITHUB-KURULUM.md --exclude=scripts
-          path: ./
-          remote_path: ${{ secrets.SSH_REMOTE_DIR }}
-          remote_host: ${{ secrets.SSH_HOST }}
-          remote_user: ${{ secrets.SSH_USERNAME }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          remote_port: ${{ secrets.SSH_PORT || 22 }}
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USERNAME }}
+          SSH_REMOTE_DIR: ${{ secrets.SSH_REMOTE_DIR }}
+        run: |
+          REMOTE="${SSH_REMOTE_DIR%/}/"
+          rsync -avzr --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'xnull/controller/config.local.php' \
+            --exclude 'deploy.config.json' \
+            --exclude 'debug_integrity_log.txt' \
+            --exclude 'xnull/debug_integrity_log.txt' \
+            --exclude 'xnull/cloaker/blocked_ips.txt' \
+            --exclude 'js/ajax/libs/GeoLite2-City.mmdb' \
+            --exclude '*.zip' \
+            --exclude 'GITHUB-KURULUM.md' \
+            --exclude 'scripts' \
+            -e "ssh -i ~/.ssh/deploy_key -p 22 -o StrictHostKeyChecking=no" \
+            ./ "${SSH_USER}@${SSH_HOST}:${REMOTE}"
 
       - name: Dosya izinlerini duzelt
         uses: appleboy/ssh-action@v1.2.0
@@ -37,9 +55,11 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          port: 22
           script: |
             REMOTE="${{ secrets.SSH_REMOTE_DIR }}"
+            REMOTE="${REMOTE%/}/"
             find "$REMOTE" -type d -exec chmod 755 {} \;
             find "$REMOTE" -type f -exec chmod 644 {} \;
             if [ -f "$REMOTE/.htaccess" ]; then chmod 644 "$REMOTE/.htaccess"; fi
+            echo "Deploy tamam: $REMOTE"
