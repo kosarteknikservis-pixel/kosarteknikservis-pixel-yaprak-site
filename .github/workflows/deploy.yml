@@ -46,6 +46,10 @@ jobs:
             --exclude '*.zip' \
             --exclude 'GITHUB-KURULUM.md' \
             --exclude 'scripts' \
+            --exclude 'xnull/assets/img/urunler/' \
+            --exclude 'xnull/assets/img/galeri/' \
+            --exclude 'xnull/assets/img/genel/' \
+            --exclude 'assets/img/genel/' \
             -e "ssh -i ~/.ssh/deploy_key -p 22 -o StrictHostKeyChecking=no" \
             ./ "${SSH_USER}@${SSH_HOST}:${REMOTE}"
 

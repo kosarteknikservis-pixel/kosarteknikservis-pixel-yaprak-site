@@ -45,7 +45,7 @@ if (Test-Path $winScp) {
 option batch abort
 option confirm off
 open sftp://$($ssh.username)@$($ssh.host):$($ssh.port)/ -privatekey="$keyPath"
-synchronize remote "$root" "$remoteDir" -delete -criteria="|config.local.php|deploy.config.json|debug_integrity_log.txt|blocked_ips.txt|.git/|.github/|GeoLite2-City.mmdb|*.zip|scripts/|GITHUB-KURULUM.md"
+synchronize remote "$root" "$remoteDir" -delete -criteria="|config.local.php|deploy.config.json|debug_integrity_log.txt|blocked_ips.txt|.git/|.github/|GeoLite2-City.mmdb|*.zip|scripts/|GITHUB-KURULUM.md|xnull/assets/img/urunler/|xnull/assets/img/galeri/|xnull/assets/img/genel/|assets/img/genel/"
 exit
 "@ | Set-Content $scriptFile -Encoding UTF8
 
