@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Sipari_ özeti">
+  <defs>
+    <linearGradient id="ocbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#334155"/>
+      <stop offset="55%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="ocaccent" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:0.9"/>
+      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0.5"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#ocbg)"/>
+  <circle cx="200" cy="200" r="118" fill="none" stroke="rgba(148,163,184,0.22)" stroke-width="2"/>
+  <circle cx="200" cy="200" r="88" fill="rgba(15,23,42,0.35)" stroke="rgba(148,163,184,0.15)" stroke-width="1"/>
+  <!-- Sepet çizgileri -->
+  <path d="M138 178 L138 278 Q138 296 156 296 L244 296 Q262 296 262 278 L262 178 Z" fill="none" stroke="#94a3b8" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M152 178 L152 162 Q152 128 200 128 Q248 128 248 162 L248 178" fill="none" stroke="#94a3b8" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M168 218 L232 218" stroke="url(#ocaccent)" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+  <path d="M176 242 L224 242" stroke="rgba(148,163,184,0.45)" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

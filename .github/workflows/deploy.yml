@@ -1,0 +1,45 @@
+name: Canliya Deploy
+
+on:
+  # Manuel tetikleme: GitHub → Actions → Canliya Deploy → Run workflow
+  workflow_dispatch:
+  # main dalına push edildiğinde otomatik deploy
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: FTP ile canlı sunucuya gönder
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Kodu indir
+        uses: actions/checkout@v4
+
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT || 21 }}
+          protocol: ftp
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_REMOTE_DIR || '/public_html/' }}
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/config.local.php
+            **/deploy.config.json
+            **/debug_integrity_log.txt
+            **/xnull/debug_integrity_log.txt
+            **/xnull/cloaker/blocked_ips.txt
+            **/.gitignore
+            **/GITHUB-KURULUM.md
+            **/scripts/**

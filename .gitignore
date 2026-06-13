@@ -1,0 +1,45 @@
+# Ortam / gizli ayarlar
+xnull/controller/config.local.php
+deploy.config.json
+.env
+.env.*
+
+# Log ve debug
+debug_integrity_log.txt
+xnull/debug_integrity_log.txt
+*.log
+
+# Yedek ve geçici
+*.bak
+*.backup
+*.old
+*.swp
+*.tmp
+*~
+
+# Cloaker IP listesi (canlıda sunucuya özel)
+xnull/cloaker/blocked_ips.txt
+
+# IDE / OS
+.idea/
+.vscode/
+*.sublime-*
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Yüklenen görseller (canlıda kalır, repoda tutulmaz)
+assets/img/genel/*
+!assets/img/genel/.gitkeep
+!assets/img/genel/order-checkout-card-default.svg
+xnull/assets/img/**/*
+!xnull/assets/img/**/.gitkeep
+
+# GeoIP / buyuk arsivler (GitHub limiti)
+js/ajax/libs/GeoLite2-City.mmdb
+**/*.mmdb
+**/*.zip
+
+# Veritabanı yedekleri
+*.sql.gz
+backups/

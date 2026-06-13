@@ -1,0 +1,14 @@
+{
+  "localUrl": "http://localhost/yaprak/public_html/public_html%20(21)/",
+  "ftp": {
+    "server": "ftp.ornekdomain.com",
+    "port": 21,
+    "username": "ftp_kullanici",
+    "password": "ftp_sifre",
+    "remoteDir": "/public_html/"
+  },
+  "github": {
+    "remote": "git@github.com:kosarteknikservis-pixel/REPO-ADI.git",
+    "branch": "main"
+  }
+}

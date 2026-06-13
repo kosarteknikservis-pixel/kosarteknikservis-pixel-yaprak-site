@@ -1,0 +1,30 @@
+# ============================================
+# ADMIN PANEL GÜVENLİK AYARLARI
+# ============================================
+
+# Directory Listing'i Kapat
+Options -Indexes
+
+# Hassas Dosyaları Koru
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|bak|backup|old|orig|save|swp|tmp|json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# PHP Ayarları
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_flag expose_php Off
+</IfModule>
+
+# Header Güvenlik
+<IfModule mod_headers.c>
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header set X-XSS-Protection "1; mode=block"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header unset Server
+    Header unset X-Powered-By
+</IfModule>
+

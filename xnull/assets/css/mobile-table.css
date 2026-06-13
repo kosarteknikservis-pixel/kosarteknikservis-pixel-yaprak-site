@@ -1,0 +1,231 @@
+/* MOBİL CANAVARI TABLO STİLİ - KART GÖRÜMÜ (AGRESİF REVİZYON) */
+@media screen and (max-width: 991px) {
+
+    /* Tabloyu ve tüm alt öğeleri blok yapıya zorla */
+    .mobile-table,
+    .mobile-table thead,
+    .mobile-table tbody,
+    .mobile-table th,
+    .mobile-table td,
+    .mobile-table tr {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Başlık satırını mobilde tamamen gizle */
+    .mobile-table thead {
+        display: none !important;
+    }
+
+    /* Her satırı bir kart gibi göster */
+    .mobile-table tbody tr {
+        margin-bottom: 15px !important;
+        background: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        position: relative !important;
+    }
+
+    /* Hücreleri satır satır ayarla */
+    .mobile-table tbody td {
+        border: none !important;
+        border-bottom: 1px solid #edf2f7 !important;
+        position: relative !important;
+        padding: 12px 15px 12px 45% !important;
+        /* Sol taraf etiket için boşluk */
+        min-height: 48px !important;
+        text-align: right !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        font-size: 13px !important;
+        white-space: normal !important;
+        word-break: break-all !important;
+    }
+
+    /* Etiketleri (Header metinlerini) yerleştir */
+    .mobile-table tbody td:before {
+        content: attr(data-label);
+        position: absolute !important;
+        left: 15px !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 40% !important;
+        display: flex !important;
+        align-items: center !important;
+        font-weight: 800 !important;
+        text-align: left !important;
+        color: #4a5568 !important;
+        font-size: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        pointer-events: none !important;
+    }
+
+    /* İlk hücre (Checkbox veya ID) - Kart başlığı gibi yap */
+    .mobile-table tbody td:first-child {
+        background: #f8fafc !important;
+        padding-left: 15px !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        font-weight: bold !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+    }
+
+    .mobile-table tbody td:first-child:before {
+        display: none !important;
+    }
+
+    /* Son hücre (İşlemler) - Kart altı gibi yap */
+    .mobile-table tbody td:last-child {
+        border-bottom: none !important;
+        background: #f8fafc !important;
+        justify-content: center !important;
+        padding: 15px !important;
+        gap: 10px !important;
+    }
+
+    .mobile-table tbody td:last-child:before {
+        display: none !important;
+    }
+
+    /* Butonları kart içinde genişlet */
+    .mobile-table .btn {
+        margin: 0 !important;
+        flex: 1 !important;
+        padding: 8px 5px !important;
+        font-size: 11px !important;
+    }
+
+    /* DataTables Arama ve Sayfalama */
+    .dataTables_wrapper .dataTables_filter {
+        text-align: left !important;
+        width: 100% !important;
+        float: none !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100% !important;
+        margin: 5px 0 15px 0 !important;
+        height: 45px !important;
+        border-radius: 8px !important;
+    }
+
+    /* Aç/Kapa Durumları */
+    .mobile-table tbody tr.mobile-collapsed td {
+        display: none !important;
+    }
+
+    .mobile-table tbody tr.mobile-collapsed td:nth-child(1),
+    .mobile-table tbody tr.mobile-collapsed td:nth-child(2),
+    .mobile-table tbody tr.mobile-collapsed td:nth-child(3) {
+        display: flex !important;
+    }
+
+    /* Aç/Kapa Butonu Görünümü */
+    .mobile-table tbody tr.mobile-collapsed:after {
+        content: '\2295  DETAYLARI GÖSTER';
+        display: block !important;
+        padding: 12px !important;
+        text-align: center !important;
+        background: #ebf4ff !important;
+        color: #3182ce !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        cursor: pointer !important;
+    }
+
+    .mobile-table tbody tr.mobile-expanded:after {
+        content: '\2296  DETAYLARI GİZLE';
+        display: block !important;
+        padding: 12px !important;
+        text-align: center !important;
+        background: #fff5f5 !important;
+        color: #e53e3e !important;
+        font-weight: 700 !important;
+        font-size: 12px !important;
+        cursor: pointer !important;
+    }
+
+    /* DataTables'ın eklediği scrollbar'ları mobilde devre dışı bırak */
+    .dataTables_scrollBody {
+        overflow: visible !important;
+        width: 100% !important;
+    }
+
+    .dataTables_scrollHead {
+        display: none !important;
+    }
+
+    /* GENEL MOBİL UI DÜZELTMELERİ */
+
+    /* Kaydırılabilir sekmeler (Nav Tabs) */
+    .nav-tabs {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        border-bottom: 2px solid #edf2f7 !important;
+        margin-bottom: 15px !important;
+        scrollbar-width: none;
+        /* Firefox için scrollbar gizle */
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari için scrollbar gizle */
+    }
+
+    .nav-tabs .nav-item {
+        white-space: nowrap !important;
+        flex: 0 0 auto !important;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 10px 15px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Dosya yükleme ve Input Group Düzeltmeleri */
+    .input-group {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+    }
+
+    .input-group .form-control {
+        flex: 1 1 100% !important;
+        margin-bottom: 5px !important;
+        border-radius: 8px !important;
+    }
+
+    .input-group-addon,
+    .input-group-btn {
+        flex: 1 !important;
+        width: auto !important;
+    }
+
+    .input-group-addon.btn,
+    .input-group-btn .btn {
+        width: 100% !important;
+        border-radius: 8px !important;
+        margin-bottom: 5px !important;
+    }
+
+    /* Genel Form Elemanları */
+    .form-group label {
+        font-weight: 700 !important;
+        margin-bottom: 8px !important;
+        display: block !important;
+    }
+
+    .card-block {
+        padding: 15px !important;
+    }
+}
