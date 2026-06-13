@@ -52,9 +52,9 @@ if (isset($_POST['duzenle'])) {
 
 $siteBase = legal_pages_site_base($settingsprint);
 $slugMap = array(
-	'teslimat_kosullari' => 'teslimat-kosullari',
-	'satis_politikasi'     => 'satis-politikasi',
-	'iptal_iade'           => 'iptal-iade',
+	'teslimat_kosullari' => 'teslimat-kosullari.php',
+	'satis_politikasi'     => 'satis-politikasi.php',
+	'iptal_iade'           => 'iptal-iade.php',
 );
 $publicSlug = $slugMap[$legal_table] ?? '';
 $pageAd = trim((string) ($row['ad'] ?? ''));

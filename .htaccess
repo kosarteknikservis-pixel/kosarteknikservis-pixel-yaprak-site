@@ -82,6 +82,7 @@ ServerSignature Off
 # RewriteBase bazı kurulumlarda (ör. sanal host kökü = nir) yanlış olunca kurallar çalışmaz.
 # Boş bırakınca Apache alt klasörü kendisi çözer; sorun yaşarsanız tek satır deneyin: RewriteBase /nir/ veya RewriteBase /
 RewriteEngine On
+RewriteBase /
 
 RewriteRule ^robots\.txt$ robots.php [NC,L]
 RewriteRule ^sitemap\.xml$ sitemap.php [NC,L]
@@ -97,6 +98,7 @@ RewriteRule ^sayfa/([0-9a-zA-Z-_]+)$ sayfa.php?slug=$1 [NC,L,QSA]
 RewriteRule ^urun/([0-9a-zA-Z-_]+)$ index.php [NC,L]
 
 # Dinamik formlar: /nir/destek-talebi → form-goruntule.php?slug=destek-talebi
+RewriteCond %{REQUEST_URI} !^/(teslimat-kosullari|satis-politikasi|iptal-iade|gizlilik|sozlesme|guvenli-odeme|siparis-onay)(\.php)?/?$ [NC]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^([A-Za-z0-9_-]+)/?$ form-goruntule.php?slug=$1 [L,QSA]

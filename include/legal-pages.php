@@ -162,9 +162,9 @@ if (!function_exists('legal_pages_default_content')) {
 if (!function_exists('legal_pages_public_map')) {
 	function legal_pages_public_map() {
 		return array(
-			'teslimat' => array('table' => 'teslimat_kosullari', 'slug' => 'teslimat-kosullari', 'label' => 'Teslimat Koşulları'),
-			'satis'    => array('table' => 'satis_politikasi', 'slug' => 'satis-politikasi', 'label' => 'Satış Politikası'),
-			'iptal'    => array('table' => 'iptal_iade', 'slug' => 'iptal-iade', 'label' => 'İptal ve İade'),
+			'teslimat' => array('table' => 'teslimat_kosullari', 'slug' => 'teslimat-kosullari.php', 'label' => 'Teslimat Koşulları'),
+			'satis'    => array('table' => 'satis_politikasi', 'slug' => 'satis-politikasi.php', 'label' => 'Satış Politikası'),
+			'iptal'    => array('table' => 'iptal_iade', 'slug' => 'iptal-iade.php', 'label' => 'İptal ve İade'),
 			'sozlesme' => array('table' => 'sozlesme', 'slug' => 'sozlesme', 'label' => 'Mesafeli Satış Sözleşmesi'),
 			'gizlilik' => array('table' => 'gizlilik', 'slug' => 'gizlilik', 'label' => 'Gizlilik Politikası'),
 		);
